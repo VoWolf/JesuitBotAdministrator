@@ -6,21 +6,61 @@ warned_users = {}
 auto = False
 mute_time = 300
 mute_pause_time = 300
-za = 0
-protiv = 0
+vote_data = [0, 0, [], -1, ["", 0]]  # za, protiv, voted, message_id
 
 
 def vote(message):
+    global vote_data
     if message.reply_to_message:
+        vote_data[2].append(message.reply_to_message.from_user.username)
+        vote_data[4][0] = message.reply_to_message.from_user.username
+        vote_data[4][1] = message.reply_to_message.from_user.id
         buttons = types.InlineKeyboardMarkup()
         buttons.row(
-            types.InlineKeyboardButton("", callback_data=""),
-            types.InlineKeyboardButton("", callback_data="")
+            types.InlineKeyboardButton("Да", callback_data="za"),
+            types.InlineKeyboardButton("Нет", callback_data="protiv")
         )
-        tserberus.reply_to(message, f"ГОЛОСОВАНИЕ\nРазмутить {message.from_user.username}?\nДа: {za} голосов | Нет: "
-                                    f"{protiv} голосов")
+        tserberus.reply_to(message, f"ГОЛОСОВАНИЕ\nРазмутить {message.reply_to_message.from_user.username}?\nДа: "
+                                    f"{vote_data[0]} голосов | Нет: {vote_data[1]} голосов", reply_markup=buttons)
+        vote_data[3] = message.id
     else:
         tserberus.send_message(message.chat.id, "Данную команду надо использовать ответом на сообщение")
+
+
+def vote_process_accept(call):
+    global vote_data
+    vote_data[0] += 1
+    buttons = types.InlineKeyboardMarkup()
+    buttons.row(
+        types.InlineKeyboardButton("Да", callback_data="za"),
+        types.InlineKeyboardButton("Нет", callback_data="protiv")
+    )
+    tserberus.edit_message_text(f"ГОЛОСОВАНИЕ\nРазмутить {vote_data[4][0]}?\nДа: "
+                                f"{vote_data[0]} голосов | Нет: {vote_data[1]} голосов", call.message.chat.id,
+                                vote_data[3] + 1, reply_markup=buttons)
+    if vote_data[0] > tserberus.get_chat_member_count(call.message.chat.id) // 2:
+        chat_id = call.message.chat.id
+        user_id = vote_data[4][1]
+        tserberus.restrict_chat_member(
+            chat_id, user_id, can_send_messages=True, can_send_media_messages=True,
+            can_send_other_messages=True, can_add_web_page_previews=True
+        )
+        tserberus.edit_message_text(f"Пользователь {vote_data[4][0]} реабилитирован", call.message.chat.id,
+                                    vote_data[3] + 1)
+        vote_data = [0, 0, [], -1, ["", 0]]
+
+
+def vote_process_cancel(call):
+    global vote_data
+    vote_data[1] += 1
+    buttons = types.InlineKeyboardMarkup()
+    buttons.row(
+        types.InlineKeyboardButton("Да", callback_data="za"),
+        types.InlineKeyboardButton("Нет", callback_data="protiv")
+    )
+    tserberus.edit_message_text(f"ГОЛОСОВАНИЕ\nРазмутить {vote_data[4][0]}?\nДа: "
+                                f"{vote_data[0]} голосов | Нет: {vote_data[1]} голосов", call.message.chat.id,
+                                vote_data[3] + 1, reply_markup=buttons)
 
 
 def auto_pilot_on(message):
@@ -145,10 +185,17 @@ def unmute_user(message):
 
 
 def callback_handler(call):
+    global vote_data
     command = call.data
+    if call.from_user.username not in vote_data[2]:
+        vote_data[2].append(call.from_user.username)
+        match command:
+            case "za":
+                vote_process_accept(call)
+            case "protiv":
+                vote_process_cancel(call)
+    else:
+        tserberus.send_message(call.message.chat.id, f"{call.from_user.username}, вы не можете голосовать или"
+                                                     f" уже проголосовали!")
 
-    match command:
-        case "za":
-            pass
-        case "protiv":
-            pass
+
