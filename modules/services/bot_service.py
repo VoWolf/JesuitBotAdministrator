@@ -12,6 +12,7 @@ vote_data = [0, 0, [], -1, ["", 0]]  # za, protiv, voted, message_id
 def vote(message):
     global vote_data
     if message.reply_to_message:
+        vote_data = [0, 0, [], -1, ["", 0]]
         vote_data[2].append(message.reply_to_message.from_user.username)
         vote_data[4][0] = message.reply_to_message.from_user.username
         vote_data[4][1] = message.reply_to_message.from_user.id
@@ -35,10 +36,17 @@ def vote_process_accept(call):
         types.InlineKeyboardButton("Да", callback_data="za"),
         types.InlineKeyboardButton("Нет", callback_data="protiv")
     )
-    tserberus.edit_message_text(f"ГОЛОСОВАНИЕ\nРазмутить {vote_data[4][0]}?\nДа: "
-                                f"{vote_data[0]} голосов | Нет: {vote_data[1]} голосов", call.message.chat.id,
-                                vote_data[3] + 1, reply_markup=buttons)
-    if vote_data[0] > tserberus.get_chat_member_count(call.message.chat.id) // 2:
+    try:
+        tserberus.edit_message_text(f"ГОЛОСОВАНИЕ\nРазмутить {vote_data[4][0]}?\nДа: "
+                                    f"{vote_data[0]} голосов | Нет: {vote_data[1]} голосов\nПроголосовали: "
+                                    f"{', '.join(vote_data[2][1:])}", call.message.chat.id, vote_data[3] + 1,
+                                    reply_markup=buttons)
+    except:
+        tserberus.send_message(call.message.chat.id, f"ГОЛОСОВАНИЕ\nРазмутить {vote_data[4][0]}?\nДа: {vote_data[0]} "
+                                                     f"голосов | Нет: {vote_data[1]} голосов\nПроголосовали: "
+                                                     f"{', '.join(vote_data[2][1:])}",
+                                                     reply_markup=buttons)
+    if vote_data[0] > tserberus.get_chat_member_count(call.message.chat.id) // 2 - 2:
         chat_id = call.message.chat.id
         user_id = vote_data[4][1]
         tserberus.restrict_chat_member(
@@ -58,9 +66,15 @@ def vote_process_cancel(call):
         types.InlineKeyboardButton("Да", callback_data="za"),
         types.InlineKeyboardButton("Нет", callback_data="protiv")
     )
-    tserberus.edit_message_text(f"ГОЛОСОВАНИЕ\nРазмутить {vote_data[4][0]}?\nДа: "
-                                f"{vote_data[0]} голосов | Нет: {vote_data[1]} голосов", call.message.chat.id,
-                                vote_data[3] + 1, reply_markup=buttons)
+    try:
+        tserberus.edit_message_text(f"ГОЛОСОВАНИЕ\nРазмутить {vote_data[4][0]}?\nДа: "
+                                    f"{vote_data[0]} голосов | Нет: {vote_data[1]} голосов\nПроголосовали: "
+                                    f"{', '.join(vote_data[2][1:])}", call.message.chat.id, vote_data[3] + 1,
+                                    reply_markup=buttons)
+    except:
+        tserberus.send_message(call.message.chat.id, f"ГОЛОСОВАНИЕ\nРазмутить {vote_data[4][0]}?\nДа: "
+                                    f"{vote_data[0]} голосов | Нет: {vote_data[1]} голосов\nПроголосовали: "
+                                    f"{', '.join(vote_data[2][1:])}", reply_markup=buttons)
 
 
 def auto_pilot_on(message):
@@ -96,6 +110,7 @@ def auto_pilot_off(message):
 def message_handle(message):
     global warned_users
     if check_message(message):
+
         nik = message.from_user.username
         tserberus.delete_message(message.chat.id, message.id)
         if auto:
@@ -103,20 +118,26 @@ def message_handle(message):
                 if warned_users[el] < time.time():
                     del warned_users[el]
             if nik in list(warned_users.keys()):
-                tserberus.restrict_chat_member(message.chat.id, message.from_user.id, until_date=time.time() + mute_time*60)
-                tserberus.send_message(message.chat.id, f"Попуск {nik} лишен права отправлять сообщения на {mute_time} "
+                if message.from_user.username not in ["innorif2099", "IezyitskyGuardBot"]:
+                    tserberus.restrict_chat_member(message.chat.id, message.from_user.id, until_date=time.time() + mute_time*60)
+                    tserberus.send_message(message.chat.id, f"Попуск {nik} лишен права отправлять сообщения на {mute_time} "
                                                         f"минут за повторное наружение правил (Отдыхай)")
             else:
                 tserberus.send_message(message.chat.id, f"{nik}, вы нарушили правила! За повторное нарушение в"
                                                         f" ближайшие {mute_pause_time} минут то вы будете замучены!")
                 warned_users[nik] = time.time() + mute_pause_time*60
         else:
-            tserberus.restrict_chat_member(message.chat.id, message.from_user.id, until_date=time.time()+300)
-            tserberus.send_message(message.chat.id, f"Попуск {nik} лишен права отправлять сообщение на 5 минут")
+            if message.from_user.username not in ["innorif2099", "IezyitskyGuardBot"]:
+                tserberus.restrict_chat_member(message.chat.id, message.from_user.id, until_date=time.time()+300)
+                tserberus.send_message(message.chat.id, f"Попуск {nik} лишен права отправлять сообщение на 5 минут")
 
 
 def check_message(message):
-    forbidden_words = ["блять", "сука", "пидор", "долбоеб", "еблан"]
+    forbidden_words = ["сука", "пидор", "долбоеб", "еблан", "шлюх", "хуесос", "пидар", "немощь", "тупой", "тупая",
+                       "далбаеб", "клоун", "даун", "аутист", "птеух", "дебил", "дибил", "шавка", "шафка", "гнида",
+                       "лох", "лохушка", "мразь", "мудак", "нахал", "паскуда", "поскуда", "проститутка", "сволочь",
+                       "тварь", "ублюдок", "выродок", "уебан", "писька", "пэска", "гандон", "бомж", "глупый", "урод",
+                       "пиздюк", "хуила", "хуйло", "гей в панам", "пидрила", "хуило", "уебище", "шалав", "обезьян"]
     for el in forbidden_words:
         if el in message.text.lower():
             return True
@@ -149,6 +170,11 @@ def mute_user(message):
                 if duration > 1440:
                     tserberus.reply_to(message, "Максимальное время 24 часа (1440 минут)!")
                     return
+            print(message.reply_to_message.from_user.username)
+            if message.reply_to_message.from_user.username in ["innorif2099", "IezyitskyGuardBot"]:
+                tserberus.reply_to(message, "К сожалению, бога забанить невозможно!")
+                print()
+                return
             tserberus.restrict_chat_member(chat_id, user_id, until_date=time.time()+duration*60)
             tserberus.reply_to(
                 message, f"Пользователь {message.reply_to_message.from_user.username} замучен на {duration} минут."
@@ -160,7 +186,7 @@ def mute_user(message):
 
 
 def check_admin(message):
-    if message.from_user.username in ["LastUwUlf2001"]:
+    if message.from_user.username in ["LastUwUlf2001", "innorif2099"]:
         return True
     return False
 
@@ -194,8 +220,3 @@ def callback_handler(call):
                 vote_process_accept(call)
             case "protiv":
                 vote_process_cancel(call)
-    else:
-        tserberus.send_message(call.message.chat.id, f"{call.from_user.username}, вы не можете голосовать или"
-                                                     f" уже проголосовали!")
-
-
