@@ -6,10 +6,11 @@ warned_users = {}
 auto = False
 mute_time = 300
 mute_pause_time = 300
-vote_data = [0, 0, [], -1, ["", 0]]  # za, protiv, voted, message_id
+vote_data = [0, 0, [], -1, ["", 0]]  # za, protiv, voted, message_id, voted_username, voted_id
 
 
 def vote(message):
+    """Starts vote"""
     global vote_data
     if message.reply_to_message:
         vote_data = [0, 0, [], -1, ["", 0]]
@@ -29,6 +30,7 @@ def vote(message):
 
 
 def vote_process_accept(call):
+    """Add a new vote za, unmute if votes za > 1/2"""
     global vote_data
     vote_data[0] += 1
     buttons = types.InlineKeyboardMarkup()
@@ -59,6 +61,7 @@ def vote_process_accept(call):
 
 
 def vote_process_cancel(call):
+    """Vote +1 protiv"""
     global vote_data
     vote_data[1] += 1
     buttons = types.InlineKeyboardMarkup()
@@ -78,6 +81,7 @@ def vote_process_cancel(call):
 
 
 def auto_pilot_on(message):
+    """Turns on auto mute"""
     global mute_time, auto, mute_pause_time
     if check_admin(message):
         try:
@@ -99,6 +103,7 @@ def auto_pilot_on(message):
 
 
 def auto_pilot_off(message):
+    """Turns off auto mute"""
     global auto
     if check_admin(message):
         auto = False
@@ -128,8 +133,7 @@ def message_handle(message):
                 warned_users[nik] = time.time() + mute_pause_time*60
         else:
             if message.from_user.username not in ["innorif2099", "IezyitskyGuardBot"]:
-                tserberus.restrict_chat_member(message.chat.id, message.from_user.id, until_date=time.time()+300)
-                tserberus.send_message(message.chat.id, f"Попуск {nik} лишен права отправлять сообщение на 5 минут")
+                tserberus.send_message(message.chat.id, f"Сообщение скрыто")
 
 
 def check_message(message):
