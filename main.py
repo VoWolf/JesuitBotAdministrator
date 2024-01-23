@@ -2,6 +2,16 @@ import modules.services.bot_service
 from modules.instances.bot_instance import bot as tserberus
 
 
+@tserberus.message_handler(commands=["append"])
+def append(message):
+    modules.services.bot_service.append(message)
+
+
+@tserberus.message_handler(commands=["print_forbidden_words"])
+def append(message):
+    modules.services.bot_service.print_forbidden_words(message)
+
+
 @tserberus.message_handler(commands=["start", "restart"])
 def start(message):
     modules.services.bot_service.start(message)
