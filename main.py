@@ -39,7 +39,7 @@ def auto_pilot(message):
 
 @tserberus.message_handler(commands=["vote"])
 def vote(message):
-    modules.services.bot_service.vote(message)
+    modules.
 
 
 @tserberus.message_handler(func=lambda message: True)
