@@ -1,5 +1,5 @@
 from modules.instances.bot_instance import bot as tserberus
-from modules.super_global_variables.variables import UserData
+from modules.work_with_user_stuff.user_klass import UserData
 from telebot import types
 
 
@@ -50,10 +50,10 @@ class VoteData:
             )
 
     @staticmethod
-    def check_za_votes(call):
+    def check_za_votes(message):
         """Returns True if voted > 1/2 of group
         False if not"""
-        if tserberus.get_chat_member_count(call.message.chat.id) // 2 - 2:
+        if tserberus.get_chat_member_count(message.chat.id) // 2 - 2:
             return True
         return False
 

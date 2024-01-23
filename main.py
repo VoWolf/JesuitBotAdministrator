@@ -1,4 +1,7 @@
 import modules.services.bot_service
+import modules.command_executors.vote_executor
+import modules.command_executors.auto_pilot_executor
+import modules.command_executors.message_check_executor
 from modules.instances.bot_instance import bot as tserberus
 
 
@@ -29,27 +32,27 @@ def unmute_user(message):
 
 @tserberus.message_handler(commands=["auto_on"])
 def auto_pilot(message):
-    modules.services.bot_service.auto_pilot_on(message)
+    modules.command_executors.auto_pilot_executor.auto_pilot_on(message)
 
 
 @tserberus.message_handler(commands=["auto_off"])
 def auto_pilot(message):
-    modules.services.bot_service.auto_pilot_off(message)
+    modules.command_executors.auto_pilot_executor.auto_pilot_off(message)
 
 
 @tserberus.message_handler(commands=["vote"])
 def vote(message):
-    modules.
+    modules.command_executors.vote_executor.vote(message)
 
 
 @tserberus.message_handler(func=lambda message: True)
 def message_handler(message):
-    modules.services.bot_service.message_handle(message)
+    modules.command_executors.message_check_executor.message_handle(message)
 
 
 @tserberus.callback_query_handler(func=lambda call: True)
 def callback(call):
-    modules.services.bot_service.callback_handler(call)
+    modules.command_executors.vote_executor.callback_handler(call)
 
 
 tserberus.infinity_polling(none_stop=True)

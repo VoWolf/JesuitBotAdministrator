@@ -30,75 +30,12 @@ def append(message):
 
 
 
-
-def auto_pilot_on(message):
-    """Turns on auto mute"""
-    global mute_time, auto, mute_pause_time
-    if check_admin(message):
-        try:
-            mute_time = int(message.text.split()[1])
-            mute_pause_time = int(message.text.split()[2])
-        except IndexError:
-            tserberus.reply_to(message, "Тебе нужно указать время автомута и время автоудаления после предупреждения"
-                                        " через пробел от команды!")
-            return
-        except ValueError:
-            tserberus.reply_to(message, "Тебе нужно указать время автомута и время автоудаления после предупреждения "
-                                        "через пробел от команды. \n*Для дураков: ЭТО ЧИСЛА!")
-            return
-        auto = True
-        tserberus.reply_to(message, f"Автомут включен!\nСведения:\nВремя между предупреждениями: {mute_pause_time} "
-                                    f"минут\nВремя автомута: {mute_time} минут")
-    else:
-        tserberus.reply_to(message, "Ты не можешь этого сделать!)")
-
-
-def auto_pilot_off(message):
-    """Turns off auto mute"""
-    global auto
-    if check_admin(message):
-        auto = False
-        tserberus.reply_to(message, "Автомут отключен!")
-    else:
-        tserberus.reply_to(message, "Ты не можешь этого сделать!)")
-
-
 def print_forbidden_words(message):
     if message.from_user.username == "LastUwUlf2001":
         tserberus.send_message(message.chat.id, str(forbidden_words))
     else:
         tserberus.send_message(message.chat.id, "Ты не можешь этого сделать!)")
 
-
-def message_handle(message):
-    global warned_users
-    if check_message(message):
-
-        nik = message.from_user.username
-        tserberus.delete_message(message.chat.id, message.id)
-        if auto:
-            for el in list(warned_users.keys()):
-                if warned_users[el] < time.time():
-                    del warned_users[el]
-            if nik in list(warned_users.keys()):
-                if message.from_user.username not in ["innorif2099", "IezyitskyGuardBot"]:
-                    tserberus.restrict_chat_member(message.chat.id, message.from_user.id, until_date=time.time() + mute_time*60)
-                    tserberus.send_message(message.chat.id, f"Попуск {nik} лишен права отправлять сообщения на {mute_time} "
-                                                        f"минут за повторное наружение правил (Отдыхай)")
-            else:
-                tserberus.send_message(message.chat.id, f"{nik}, вы нарушили правила! За повторное нарушение в"
-                                                        f" ближайшие {mute_pause_time} минут то вы будете замучены!")
-                warned_users[nik] = time.time() + mute_pause_time*60
-        else:
-            if message.from_user.username not in ["innorif2099", "IezyitskyGuardBot"]:
-                tserberus.send_message(message.chat.id, f"Сообщение скрыто")
-
-
-def check_message(message):
-    for el in forbidden_words:
-        if el in message.text.lower():
-            return True
-    return False
 
 
 def start(message):
@@ -130,7 +67,6 @@ def mute_user(message):
             print(message.reply_to_message.from_user.username)
             if message.reply_to_message.from_user.username in ["innorif2099", "IezyitskyGuardBot"]:
                 tserberus.reply_to(message, "К сожалению, бога забанить невозможно!")
-                print()
                 return
             tserberus.restrict_chat_member(chat_id, user_id, until_date=time.time()+duration*60)
             tserberus.reply_to(
@@ -140,28 +76,3 @@ def mute_user(message):
             tserberus.reply_to(message, "Ты не можешь этого сделать!)")
     else:
         tserberus.reply_to(message, "Эту команду надо использовать ответом на сообщение!")
-
-
-def check_admin(message):
-    if message.from_user.username in ["LastUwUlf2001", "innorif2099"]:
-        return True
-    return False
-
-
-def unmute_user(message):
-    if check_admin(message):
-        if message.reply_to_message:
-            chat_id = message.chat.id
-            user_id = message.reply_to_message.from_user.id
-            tserberus.restrict_chat_member(
-                chat_id, user_id, can_send_messages=True, can_send_media_messages=True,
-                can_send_other_messages=True, can_add_web_page_previews=True
-            )
-            tserberus.reply_to(message, f"Пользователь {message.reply_to_message.from_user.username} размучен.")
-        else:
-            tserberus.reply_to(
-                message,
-                "Эта команда должна быть использована в ответ на сообщение пользователя, которого вы хотите размутить."
-            )
-    else:
-        tserberus.reply_to(message, "Ты не можешь этого сделать!)")
