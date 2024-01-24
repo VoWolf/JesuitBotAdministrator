@@ -9,7 +9,6 @@ class AutoPilotData:
         self.mute_time: int = mute_time
         self.mute_break_time: int = mute_break_time
         self.autopilot_is_on: bool = auto_is_on
-        print(self.autopilot_is_on)
         self.warned_users: dict = {}
         self.forbidden_words = [
             "сука", "пидор", "долбоеб", "еблан", "шлюх", "хуесос", "пидар", "немощь", "тупой", "тупая",
@@ -43,6 +42,7 @@ def auto_pilot_on(message):
                 mute_break_time=int(message.text.split()[2]),
                 auto_is_on=True
             )
+            print("Block try completed")
         except IndexError:
             tserberus.reply_to(message, "Тебе нужно указать время автомута и время автоудаления после предупреждения"
                                         " через пробел от команды!")

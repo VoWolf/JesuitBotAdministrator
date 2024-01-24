@@ -19,5 +19,3 @@ class UserData:
         """Mute current user"""
         if message.from_user.username not in ["innorif2099", "IezyitskyGuardBot", "LastUwUlf2001"]:
             tserberus.restrict_chat_member(message.chat.id, self.userid, until_date=time.time() + duration * 60)
-
-
