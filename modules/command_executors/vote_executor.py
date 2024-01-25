@@ -1,16 +1,18 @@
-from modules.instances.bot_instance import bot as tserberus
-from modules.work_with_user_stuff.user_klass import UserData
 from telebot import types
+
+from modules.domain.user import User
+from modules.instances.bot_instance import bot as cerberus
 
 
 class VoteData:
     """Helps with vote process"""
+
     def __init__(self, user_id, username, message_id):
         self.votes_za: int = 0
         self.votes_protiv: int = 0
         self.voted_users: list = []
         self.message_to_edit_id: int = message_id
-        self.userdata = UserData(user_id=user_id, username=username)
+        self.userdata = User(user_id=user_id, username=username)
         self.voted_users.append(self.userdata.username)
 
     def vote_process_accept(self, message):
@@ -19,8 +21,8 @@ class VoteData:
         self.votes_za += 1
         self.update_vote_information_message(message)
         if self.check_za_votes(message):
-            self.userdata.do_user_free(message=message)
-            tserberus.edit_message_text(
+            self.userdata.unmute(message=message)
+            cerberus.edit_message_text(
                 f"Пользователь {self.userdata.username} реабелитирован и снова может отправлять сообщения!"
             )
 
@@ -34,35 +36,36 @@ class VoteData:
         buttons = types.InlineKeyboardMarkup()
         buttons.row(
             types.InlineKeyboardButton("Да", callback_data="za"),
-            types.InlineKeyboardButton("Нет", callback_data="protiv")
+            types.InlineKeyboardButton("Нет", callback_data="protiv"),
         )
         try:
-            tserberus.edit_message_text(
+            cerberus.edit_message_text(
                 f"ГОЛОСОВАНИЕ\nРазмутить {self.userdata.username}?\nДа: "
                 f"{self.votes_za} голосов | Нет: {self.votes_protiv} голосов\nПроголосовали: "
-                f"{', '.join(self.voted_users[1:])}", message.chat.id, self.message_to_edit_id + 1, reply_markup=buttons
+                f"{', '.join(self.voted_users[1:])}",
+                message.chat.id,
+                self.message_to_edit_id + 1,
+                reply_markup=buttons,
             )
         except:
-            tserberus.send_message(
-                message.chat.id, f"ГОЛОСОВАНИЕ\nРазмутить {self.userdata.username}?\nДа: "
+            cerberus.send_message(
+                message.chat.id,
+                f"ГОЛОСОВАНИЕ\nРазмутить {self.userdata.username}?\nДа: "
                 f"{self.votes_za} голосов | Нет: {self.votes_protiv} голосов\nПроголосовали: "
-                f"{', '.join(self.voted_users[1:])}", reply_markup=buttons
+                f"{', '.join(self.voted_users[1:])}",
+                reply_markup=buttons,
             )
 
     @staticmethod
     def check_za_votes(message):
         """Returns True if voted > 1/2 of group
         False if not"""
-        if tserberus.get_chat_member_count(message.chat.id) // 2 - 2:
+        if cerberus.get_chat_member_count(message.chat.id) // 2 - 2:
             return True
         return False
 
 
-vote_data = VoteData(
-    user_id=0,
-    username="None",
-    message_id=0
-    )
+vote_data = VoteData(user_id=0, username="None", message_id=0)
 
 
 def vote(message):
@@ -72,17 +75,23 @@ def vote(message):
         vote_data = VoteData(
             user_id=message.reply_to_message.from_user.id,
             username=message.reply_to_message.from_user.username,
-            message_id=message.id
+            message_id=message.id,
         )
         buttons = types.InlineKeyboardMarkup()
         buttons.row(
             types.InlineKeyboardButton("Да", callback_data="za"),
-            types.InlineKeyboardButton("Нет", callback_data="protiv")
+            types.InlineKeyboardButton("Нет", callback_data="protiv"),
         )
-        tserberus.reply_to(message, f"ГОЛОСОВАНИЕ\nРазмутить {message.reply_to_message.from_user.username}?\nДа: "
-                                    "0 голосов | Нет: 0 голосов", reply_markup=buttons)
+        cerberus.reply_to(
+            message,
+            f"ГОЛОСОВАНИЕ\nРазмутить {message.reply_to_message.from_user.username}?\nДа: "
+            "0 голосов | Нет: 0 голосов",
+            reply_markup=buttons,
+        )
     else:
-        tserberus.send_message(message.chat.id, "Данную команду надо использовать ответом на сообщение")
+        cerberus.send_message(
+            message.chat.id, "Данную команду надо использовать ответом на сообщение"
+        )
 
 
 def vote_process_accept(call):

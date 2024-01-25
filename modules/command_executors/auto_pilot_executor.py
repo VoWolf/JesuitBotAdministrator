@@ -1,22 +1,19 @@
-from modules.command_executors.admin_check_executor import check_admin
-from modules.instances.bot_instance import bot as tserberus
 import time
+
+from modules.command_executors.admin_check_executor import check_admin
+from modules.constants.words import forbidden_words
+from modules.instances.bot_instance import bot as cerberus
 
 
 class AutoPilotData:
     """Helps with storage of values for autopilot"""
+
     def __init__(self, mute_time, mute_break_time, auto_is_on):
         self.mute_time: int = mute_time
         self.mute_break_time: int = mute_break_time
         self.autopilot_is_on: bool = auto_is_on
         self.warned_users: dict = {}
-        self.forbidden_words = [
-            "сука", "пидор", "долбоеб", "еблан", "шлюх", "хуесос", "пидар", "немощь", "тупой", "тупая",
-            "далбаеб", "клоун", "даун", "аутист", "птеух", "дебил", "дибил", "шавка", "шафка", "гнида",
-            "лох", "лохушка", "мразь", "мудак", "нахал", "паскуда", "поскуда", "проститутка", "сволочь",
-            "тварь", "ублюдок", "выродок", "уебан", "писька", "пэска", "гандон", "бомж", "глупый",
-            "урод", "пиздюк", "хуила", "хуйло", "гей в панам", "пидрила", "хуило", "уебище", "шалав", "обезьян"
-        ]
+        self.forbidden_words = forbidden_words
 
     @staticmethod
     def check_warned_users():
@@ -25,11 +22,7 @@ class AutoPilotData:
                 del autopilot_values.warned_users[el]
 
 
-autopilot_values = AutoPilotData(
-                mute_time=0,
-                mute_break_time=0,
-                auto_is_on=False
-)
+autopilot_values = AutoPilotData(mute_time=0, mute_break_time=0, auto_is_on=False)
 
 
 def auto_pilot_on(message):
@@ -40,23 +33,30 @@ def auto_pilot_on(message):
             autopilot_values = AutoPilotData(
                 mute_time=int(message.text.split()[1]),
                 mute_break_time=int(message.text.split()[2]),
-                auto_is_on=True
+                auto_is_on=True,
             )
             print("Block try completed")
         except IndexError:
-            tserberus.reply_to(message, "Тебе нужно указать время автомута и время автоудаления после предупреждения"
-                                        " через пробел от команды!")
+            cerberus.reply_to(
+                message,
+                "Тебе нужно указать время автомута и время автоудаления после предупреждения"
+                " через пробел от команды!",
+            )
             return
         except ValueError:
-            tserberus.reply_to(message, "Тебе нужно указать время автомута и время автоудаления после предупреждения "
-                                        "через пробел от команды. \n*Для дураков: ЭТО ЧИСЛА!")
+            cerberus.reply_to(
+                message,
+                "Тебе нужно указать время автомута и время автоудаления после предупреждения "
+                "через пробел от команды. \n*Для дураков: ЭТО ЧИСЛА!",
+            )
             return
-        tserberus.reply_to(
-            message, f"Автомут включен!\nСведения:\nВремя между предупреждениями: {autopilot_values.mute_break_time} "
-            f"минут\nВремя автомута: {autopilot_values.mute_time} минут"
+        cerberus.reply_to(
+            message,
+            f"Автомут включен!\nСведения:\nВремя между предупреждениями: {autopilot_values.mute_break_time} "
+            f"минут\nВремя автомута: {autopilot_values.mute_time} минут",
         )
     else:
-        tserberus.reply_to(message, "Ты не можешь этого сделать!)")
+        cerberus.reply_to(message, "Ты не можешь этого сделать!)")
 
 
 def auto_pilot_off(message):
@@ -64,6 +64,6 @@ def auto_pilot_off(message):
     global autopilot_values
     if check_admin(message):
         autopilot_values.autopilot_is_on = False
-        tserberus.reply_to(message, "Автомут отключен!")
+        cerberus.reply_to(message, "Автомут отключен!")
     else:
-        tserberus.reply_to(message, "Ты не можешь этого сделать!)")
+        cerberus.reply_to(message, "Ты не можешь этого сделать!)")
