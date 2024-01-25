@@ -40,7 +40,7 @@ def message_handle(message):
 
 
 def check_message(message):
-    for el in autopilot_values.forbidden_words:
+    for el in autopilot_values.FORBIDDEN_WORDS:
         if el in message.text.lower():
             return True
     return False

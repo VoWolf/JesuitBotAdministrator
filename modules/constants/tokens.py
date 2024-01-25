@@ -1,1 +1,1 @@
-bonesofspring_token = "6728935976:AAGW9JMZaqq28ztbdQcvmg3x1dyyYfufc6g"
+BONESOFSPRING_DEV_TOKEN = "6728935976:AAGW9JMZaqq28ztbdQcvmg3x1dyyYfufc6g"

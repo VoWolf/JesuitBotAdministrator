@@ -1,4 +1,4 @@
-forbidden_words = [
+FORBIDDEN_WORDS = [
     "сука",
     "пидор",
     "долбоеб",

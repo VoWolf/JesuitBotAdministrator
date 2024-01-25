@@ -1,6 +1,6 @@
 import time
 
-from modules.constants.words import forbidden_words
+from modules.constants.words import FORBIDDEN_WORDS
 from modules.domain.user import User
 from modules.instances.bot_instance import bot
 
@@ -49,6 +49,7 @@ class Cerberus:
             duration = extract_duration(self.message.text)
         except ValueError as err:
             bot.reply_to(self.message, str(err.args))
+
             return
 
         if self.reply_to_message_author.can_be_muted:
@@ -71,6 +72,7 @@ class Cerberus:
             bot.reply_to(
                 self.message, "Эту команду надо использовать ответом на сообщение!"
             )
+
             return
 
         bot.restrict_chat_member(
@@ -88,7 +90,7 @@ class Cerberus:
 
     def print_forbidden_words(self):
         if self.reply_to_message_author.is_admin:
-            bot.send_message(self.chat_id, str(forbidden_words))
+            bot.send_message(self.chat_id, str(FORBIDDEN_WORDS))
         else:
             bot.send_message(self.chat_id, "Ты не можешь этого сделать!)")
 
