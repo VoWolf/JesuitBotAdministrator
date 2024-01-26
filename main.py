@@ -1,4 +1,3 @@
-import modules.command_executors.auto_pilot_executor
 import modules.command_executors.message_check_executor
 import modules.command_executors.vote_executor
 from modules.db.database import create_tables
@@ -46,12 +45,14 @@ def unmute(message):
 
 @bot.message_handler(commands=["auto_on"])
 def auto_pilot(message):
-    modules.command_executors.auto_pilot_executor.auto_pilot_on(message)
+    cerberus = Cerberus(message)
+    cerberus.turn_pilot_on()
 
 
 @bot.message_handler(commands=["auto_off"])
 def auto_pilot(message):
-    modules.command_executors.auto_pilot_executor.auto_pilot_off(message)
+    cerberus = Cerberus(message)
+    cerberus.turn_pilot_off()
 
 
 @bot.message_handler(commands=["vote"])

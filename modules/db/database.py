@@ -13,7 +13,22 @@ class ForbiddenWord(BaseModel):
     word = CharField()
 
 
+class Pilot(BaseModel):
+    id = AutoField()
+    name = CharField()
+    is_on = BooleanField()
+    mute_time = IntegerField()
+    mute_break_time = IntegerField()
+
+
+class User(BaseModel):
+    id = AutoField()
+    telegram_id = IntegerField()
+    warnings_count = IntegerField()
+    warnings_valid_until = DateTimeField()
+
+
 def create_tables():
     db.connect()
     with db:
-        db.create_tables([ForbiddenWord])
+        db.create_tables([ForbiddenWord, Pilot])

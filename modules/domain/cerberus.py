@@ -1,7 +1,7 @@
 import time
 from typing import Callable
 
-from modules.db.database import ForbiddenWord
+from modules.db.database import ForbiddenWord, Pilot
 from modules.domain.user import User
 from modules.instances.bot_instance import bot
 
@@ -117,7 +117,7 @@ class Cerberus:
 
     @admin_guard
     def add_forbidden_word(self):
-        """Adds forbiden word"""
+        """Adds forbidden word"""
         try:
             extract_and_add_forbidden_word(self.message.text)
             self.send("Список запрещенных слов обновлен!")
@@ -133,8 +133,63 @@ class Cerberus:
         except ValueError as err:
             self.reply(str(err.args))
 
+    @admin_guard
+    def turn_pilot_on(self):
+        """Turns autopilot on"""
+        pilot = Pilot.get(Pilot.name == "autopilot")
 
-def extract_duration(text):
+        try:
+            mute_time, mute_break_time = extract_pilot_params(self.message.text)
+        except ValueError as err:
+            self.reply(str(err.args))
+            return
+
+        pilot.is_on = True
+        pilot.mute_time = mute_time
+        pilot.mute_break_time = mute_break_time
+        pilot.save()
+
+        self.reply(
+            f"Автомьют включен!\nСведения:\nВремя между предупреждениями: {mute_break_time} "
+            f"минут\nВремя автомьюта: {mute_time} минут"
+        )
+
+    @admin_guard
+    def turn_pilot_off(self):
+        """Turns autopilot off"""
+        pilot = Pilot.get(name="autopilot")
+        pilot.is_on = False
+        pilot.save()
+        self.reply("Автомьют отключен!")
+
+
+def extract_pilot_params(text: str):
+    args_list = text.split()
+
+    if len(args_list) < 3:
+        raise ValueError(
+            f"Тебе нужно указать время автомьюта и время автоудаления после предупреждения ",
+            f"через пробел от команды. \n*Для дураков: ЭТО ЧИСЛА!",
+        )
+
+    try:
+        mute_time = int(args_list[1])
+    except Exception as exc:
+        raise ValueError(
+            "Время автомьюта должно быть числом (первый параметр)"
+        ) from exc
+
+    try:
+        mute_break_time = int(args_list[2])
+    except Exception as exc:
+        raise ValueError(
+            "Время автоудаления после предупреждения должно быть числом (второй параметр)"
+        ) from exc
+
+    return mute_time, mute_break_time
+
+
+def extract_duration(text: str):
     """Extracts second word from string as duration(int)"""
     duration = 5
 
