@@ -25,30 +25,36 @@ class Cerberus:
             user_id=message.from_user.id,
         )
 
+    def send(self, text):
+        bot.send_message(self.chat_id, text)
+
     def start(self):
         """Sends start message"""
-        bot.send_message(
-            self.chat_id, "Привет! Я бот администратор, помогаю управлять чатом:)"
-        )
+        self.send("Привет! Я бот администратор, помогаю управлять чатом:)")
+
+    def is_user_admin(self):
+        if not self.message_author.is_admin:
+            self.reply("Ты не можешь этого сделать!)")
+            return False
+        return True
+
+    def reply(self, text: str):
+        bot.reply_to(self.message, text)
 
     def mute_user(self):
         """Mute user"""
         if not self.reply_to_message_author:
-            bot.reply_to(
-                self.message, "Эту команду надо использовать ответом на сообщение!"
-            )
+            self.reply("Эту команду надо использовать ответом на сообщение!")
 
             return
 
-        if not self.message_author.is_admin:
-            bot.reply_to(self.message, "Ты не можешь этого сделать!)")
-
+        if not self.is_user_admin():
             return
 
         try:
             duration = extract_duration(self.message.text)
         except ValueError as err:
-            bot.reply_to(self.message, str(err.args))
+            self.reply(str(err.args))
 
             return
 
@@ -59,19 +65,16 @@ class Cerberus:
                 until_date=time.time() + duration * 60,
             )
 
-            bot.reply_to(
-                self.message,
-                f"Пользователь {self.reply_to_message_author.username} замучен на {duration} минут.",
+            self.reply(
+                f"Пользователь {self.reply_to_message_author.username} замучен на {duration} минут."
             )
         else:
-            bot.reply_to(self.message, "К сожалению, бога забанить невозможно!")
+            self.reply("К сожалению, бога забанить невозможно!")
 
     def unmute_user(self):
         """Unmute user"""
         if not self.reply_to_message_author:
-            bot.reply_to(
-                self.message, "Эту команду надо использовать ответом на сообщение!"
-            )
+            self.reply("Эту команду надо использовать ответом на сообщение!")
 
             return
 
@@ -84,15 +87,13 @@ class Cerberus:
             can_add_web_page_previews=True,
         )
 
-        bot.reply_to(
-            self.message, f"{self.reply_to_message_author.username} освобожден!"
-        )
+        self.reply(f"{self.reply_to_message_author.username} освобожден!")
 
     def print_forbidden_words(self):
-        if self.reply_to_message_author.is_admin:
-            bot.send_message(self.chat_id, str(FORBIDDEN_WORDS))
-        else:
-            bot.send_message(self.chat_id, "Ты не можешь этого сделать!)")
+        if not self.is_user_admin():
+            return
+
+        self.send(str(FORBIDDEN_WORDS))
 
 
 def extract_duration(text):
