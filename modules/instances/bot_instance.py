@@ -1,4 +1,6 @@
 import telebot
 
+from modules.constants.tokens import BONESOFSPRING_DEV_TOKEN
 
-bot = telebot.TeleBot("6564227275:AAHGCGpUN_pobCj2UjfFOnajU_QqZG29I9M")
+# bot = telebot.TeleBot(CERBERUS_TEST_TOKEN)
+bot = telebot.TeleBot(BONESOFSPRING_DEV_TOKEN)

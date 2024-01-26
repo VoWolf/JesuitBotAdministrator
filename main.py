@@ -1,55 +1,74 @@
-import modules.services.bot_service
-from modules.instances.bot_instance import bot as tserberus
+from modules.db.database import create_tables
+from modules.domain.cerberus import Cerberus
+from modules.instances.bot_instance import bot
+
+create_tables()
 
 
-@tserberus.message_handler(commands=["append"])
+@bot.message_handler(commands=["append"])
 def append(message):
-    modules.services.bot_service.append(message)
+    cerberus = Cerberus(message)
+    cerberus.add_forbidden_word()
 
 
-@tserberus.message_handler(commands=["print_forbidden_words"])
-def append(message):
-    modules.services.bot_service.print_forbidden_words(message)
+@bot.message_handler(commands=["remove"])
+def remove(message):
+    cerberus = Cerberus(message)
+    cerberus.remove_forbidden_word()
 
 
-@tserberus.message_handler(commands=["start", "restart"])
+@bot.message_handler(commands=["print_forbidden_words"])
+def print_forbidden_words(message):
+    cerberus = Cerberus(message)
+    cerberus.print_forbidden_words()
+
+
+@bot.message_handler(commands=["start", "restart"])
 def start(message):
-    modules.services.bot_service.start(message)
+    cerberus = Cerberus(message)
+    cerberus.start()
 
 
-@tserberus.message_handler(commands=["mute"])
+@bot.message_handler(commands=["mute"])
 def mute(message):
-    modules.services.bot_service.mute_user(message)
+    cerberus = Cerberus(message)
+    cerberus.mute_user()
 
 
-@tserberus.message_handler(commands=["unmute"])
-def unmute_user(message):
-    modules.services.bot_service.unmute_user(message)
+@bot.message_handler(commands=["unmute"])
+def unmute(message):
+    cerberus = Cerberus(message)
+    cerberus.unmute_user()
 
 
-@tserberus.message_handler(commands=["auto_on"])
+@bot.message_handler(commands=["auto_on"])
 def auto_pilot(message):
-    modules.services.bot_service.auto_pilot_on(message)
+    cerberus = Cerberus(message)
+    cerberus.turn_pilot_on()
 
 
-@tserberus.message_handler(commands=["auto_off"])
+@bot.message_handler(commands=["auto_off"])
 def auto_pilot(message):
-    modules.services.bot_service.auto_pilot_off(message)
+    cerberus = Cerberus(message)
+    cerberus.turn_pilot_off()
 
 
-@tserberus.message_handler(commands=["vote"])
+@bot.message_handler(commands=["vote"])
 def vote(message):
-    modules.services.bot_service.vote(message)
+    print("huj")
+    # modules.command_executors.vote_executor.vote(message)
 
 
-@tserberus.message_handler(func=lambda message: True)
+@bot.message_handler(func=lambda message: True)
 def message_handler(message):
-    modules.services.bot_service.message_handle(message)
+    cerberus = Cerberus(message)
+    cerberus.handle_message()
 
 
-@tserberus.callback_query_handler(func=lambda call: True)
+@bot.callback_query_handler(func=lambda call: True)
 def callback(call):
-    modules.services.bot_service.callback_handler(call)
+    print("huj")
+    # modules.command_executors.vote_executor.callback_handler(call)
 
 
-tserberus.infinity_polling(none_stop=True)
+bot.infinity_polling(none_stop=True)
