@@ -1,4 +1,5 @@
 import time
+from typing import Callable
 
 from modules.db.database import ForbiddenWord
 from modules.domain.user import User
@@ -9,25 +10,6 @@ class Cerberus:
     """Bot class"""
 
     def __init__(self, message):
-        if message:
-            self.message = message
-
-            self.chat_id = message.chat.id
-
-            if message.reply_to_message:
-                self.reply_to_message_author = User(
-                    username=message.reply_to_message.from_user.username,
-                    user_id=message.reply_to_message.from_user.id,
-                )
-            else:
-                self.reply_to_message_author = None
-
-            self.message_author = User(
-                username=message.from_user.username,
-                user_id=message.from_user.id,
-            )
-
-    def reinit(self, message):
         self.message = message
 
         self.chat_id = message.chat.id
@@ -71,14 +53,26 @@ class Cerberus:
             return False
         return True
 
+    def admin_guard(func: Callable):
+        def inner(self):
+            if not self.is_user_admin():
+                return
+            func(self)
+
+        return inner
+
+    def reply_user_guard(func: Callable):
+        def inner(self):
+            if not self.is_reply_to_message_author_exists():
+                return
+            func(self)
+
+        return inner
+
+    @reply_user_guard
+    @admin_guard
     def mute_user(self):
         """Mutes user"""
-        if not self.is_reply_to_message_author_exists:
-            return
-
-        if not self.is_user_admin():
-            return
-
         try:
             mute_duration = extract_duration(self.message.text)
         except ValueError as err:
@@ -99,14 +93,10 @@ class Cerberus:
         else:
             self.reply("К сожалению, бога забанить невозможно!")
 
+    @reply_user_guard
+    @admin_guard
     def unmute_user(self):
         """Unmutes user"""
-        if not self.is_reply_to_message_author_exists:
-            return
-
-        if not self.is_user_admin():
-            return
-
         bot.restrict_chat_member(
             self.chat_id,
             self.reply_to_message_author.user_id,
@@ -118,29 +108,25 @@ class Cerberus:
 
         self.reply(f"{self.reply_to_message_author.username} освобожден!")
 
+    @admin_guard
     def print_forbidden_words(self):
         """Prints forbidden words list"""
-        if not self.is_user_admin():
-            return
-
         query = ForbiddenWord.select()
 
         self.send(str([fw.word for fw in query]))
 
+    @admin_guard
     def add_forbidden_word(self):
-        if not self.is_user_admin():
-            return
-
+        """Adds forbiden word"""
         try:
             extract_and_add_forbidden_word(self.message.text)
             self.send("Список запрещенных слов обновлен!")
         except ValueError as err:
             self.reply(str(err.args))
 
+    @admin_guard
     def remove_forbidden_word(self):
-        if not self.is_user_admin():
-            return
-
+        """Removes forbidden word"""
         try:
             extract_and_remove_forbidden_word(self.message.text)
             self.send("Список запрещенных слов обновлен!")

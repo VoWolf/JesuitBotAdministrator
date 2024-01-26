@@ -6,42 +6,41 @@ from modules.domain.cerberus import Cerberus
 from modules.instances.bot_instance import bot
 
 create_tables()
-cerberus = Cerberus(None)
 
 
 @bot.message_handler(commands=["append"])
 def append(message):
-    cerberus.reinit(message)
+    cerberus = Cerberus(message)
     cerberus.add_forbidden_word()
 
 
 @bot.message_handler(commands=["remove"])
-def append(message):
-    cerberus.reinit(message)
+def remove(message):
+    cerberus = Cerberus(message)
     cerberus.remove_forbidden_word()
 
 
 @bot.message_handler(commands=["print_forbidden_words"])
 def print_forbidden_words(message):
-    cerberus.reinit(message)
+    cerberus = Cerberus(message)
     cerberus.print_forbidden_words()
 
 
 @bot.message_handler(commands=["start", "restart"])
 def start(message):
-    cerberus.reinit(message)
+    cerberus = Cerberus(message)
     cerberus.start()
 
 
 @bot.message_handler(commands=["mute"])
 def mute(message):
-    cerberus.reinit(message)
+    cerberus = Cerberus(message)
     cerberus.mute_user()
 
 
 @bot.message_handler(commands=["unmute"])
 def unmute(message):
-    cerberus.reinit(message)
+    cerberus = Cerberus(message)
     cerberus.unmute_user()
 
 

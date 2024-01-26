@@ -1,6 +1,7 @@
 import time
 
 from modules.command_executors.auto_pilot_executor import autopilot_values
+from modules.db.database import ForbiddenWord
 from modules.domain.user import User
 from modules.instances.bot_instance import bot as cerberus
 
@@ -40,7 +41,9 @@ def message_handle(message):
 
 
 def check_message(message):
-    for el in autopilot_values.FORBIDDEN_WORDS:
+    fws = ForbiddenWord.select()
+    words = [fw.word for fw in fws]
+    for el in words:
         if el in message.text.lower():
             return True
     return False
