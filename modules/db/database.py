@@ -1,5 +1,3 @@
-import datetime
-
 from peewee import *
 
 db = SqliteDatabase("database.db")
@@ -29,7 +27,7 @@ class TgUser(BaseModel):
     chat_id = CharField()
     username = CharField()
     warnings_count = IntegerField()
-    warnings_valid_until = DateTimeField(default=datetime.datetime.now)
+    warnings_valid_until = DateTimeField()
 
 
 def create_tables():

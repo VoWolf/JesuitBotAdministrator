@@ -1,3 +1,4 @@
+import datetime
 import time
 from typing import Callable
 
@@ -31,6 +32,8 @@ class Cerberus:
 
         fws = ForbiddenWord.select()
         self.forbidden_words = [fw.word for fw in fws]
+
+        self.pilot = Pilot.get(Pilot.name == "autopilot")
 
     def send(self, text):
         """Sends new message"""
@@ -148,18 +151,16 @@ class Cerberus:
     @admin_guard
     def turn_pilot_on(self):
         """Turns autopilot on"""
-        pilot = Pilot.get(Pilot.name == "autopilot")
-
         try:
             mute_time, mute_break_time = extract_pilot_params(self.message.text)
         except ValueError as err:
             self.reply(str(err.args))
             return
 
-        pilot.is_on = True
-        pilot.mute_time = mute_time
-        pilot.mute_break_time = mute_break_time
-        pilot.save()
+        self.pilot.is_on = True
+        self.pilot.mute_time = mute_time
+        self.pilot.mute_break_time = mute_break_time
+        self.pilot.save()
 
         self.reply(
             f"Автомьют включен!\nСведения:\nВремя между предупреждениями: {mute_break_time} "
@@ -169,18 +170,49 @@ class Cerberus:
     @admin_guard
     def turn_pilot_off(self):
         """Turns autopilot off"""
-        pilot = Pilot.get(name="autopilot")
-        pilot.is_on = False
-        pilot.save()
+        self.pilot.is_on = False
+        self.pilot.save()
         self.reply("Автомьют отключен!")
+
+    def automute_user(self):
+        bot.restrict_chat_member(
+            self.chat_id,
+            self.message_author.user_id,
+            until_date=time.time() + self.pilot.mute_time * 60,
+        )
+
+        self.reply(
+            f"Попуск {self.message_author.username} лишен права отправлять сообщения на "
+            f"{self.pilot.mute_time}  минут за повторное наружение правил (Отдыхай)"
+        )
 
     def handle_message(self):
         """Controls message for forbidden words"""
-        print("Nothing")
+        if self.is_forbidden_word_in_message(self.message.text):
+            bot.delete_message(self.chat_id, self.message.id)
 
-    def check_message_for_forbidden_words(self):
+            if self.pilot.is_on:
+                if self.message_author.has_active_warnings:
+                    self.automute_user()
+                else:
+                    self.message_author.db_user.warnings_count = 1
+                    self.message_author.db_user.warnings_valid_until = (
+                            datetime.datetime.now() + self.pilot.mute_break_time
+                    )
+                    self.send(
+                        f"{self.message_author.username}, вы нарушили правила! За повторное нарушение в "
+                        f"ближайшие {self.pilot.mute_break_time} минут то вы будете замьючены!"
+                    )
+            else:
+                self.send(f"Сообщение от {self.message_author.username} скрыто")
+
+    def is_forbidden_word_in_message(self, text: str):
         """Checks if message contains one of forbidden words"""
-        print("Nothing")
+        for el in self.forbidden_words:
+            if el in text.lower():
+                return True
+
+        return False
 
 
 def extract_pilot_params(text: str):

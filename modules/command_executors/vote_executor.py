@@ -12,7 +12,7 @@ class VoteData:
         self.votes_protiv: int = 0
         self.voted_users: list = []
         self.message_to_edit_id: int = message_id
-        self.userdata = User(user_id=user_id, username=username)
+        self.userdata = User(user_id=user_id, username=username, chat_id=0)
         self.voted_users.append(self.userdata.username)
 
     def vote_process_accept(self, message):

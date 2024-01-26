@@ -1,5 +1,3 @@
-import modules.command_executors.message_check_executor
-import modules.command_executors.vote_executor
 from modules.db.database import create_tables
 from modules.domain.cerberus import Cerberus
 from modules.instances.bot_instance import bot
@@ -57,17 +55,20 @@ def auto_pilot(message):
 
 @bot.message_handler(commands=["vote"])
 def vote(message):
-    modules.command_executors.vote_executor.vote(message)
+    print("huj")
+    # modules.command_executors.vote_executor.vote(message)
 
 
 @bot.message_handler(func=lambda message: True)
 def message_handler(message):
-    modules.command_executors.message_check_executor.message_handle(message)
+    cerberus = Cerberus(message)
+    cerberus.handle_message()
 
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback(call):
-    modules.command_executors.vote_executor.callback_handler(call)
+    print("huj")
+    # modules.command_executors.vote_executor.callback_handler(call)
 
 
 bot.infinity_polling(none_stop=True)
