@@ -1,7 +1,6 @@
 import modules.command_executors.auto_pilot_executor
 import modules.command_executors.message_check_executor
 import modules.command_executors.vote_executor
-import modules.services.bot_service
 from modules.domain.cerberus import Cerberus
 from modules.instances.bot_instance import bot
 
