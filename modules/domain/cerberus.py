@@ -1,5 +1,6 @@
 import time
 
+from modules.db.database import ForbiddenWord
 from modules.domain.user import User
 from modules.instances.bot_instance import bot
 
@@ -8,7 +9,27 @@ class Cerberus:
     """Bot class"""
 
     def __init__(self, message):
+        if message:
+            self.message = message
+
+            self.chat_id = message.chat.id
+
+            if message.reply_to_message:
+                self.reply_to_message_author = User(
+                    username=message.reply_to_message.from_user.username,
+                    user_id=message.reply_to_message.from_user.id,
+                )
+            else:
+                self.reply_to_message_author = None
+
+            self.message_author = User(
+                username=message.from_user.username,
+                user_id=message.from_user.id,
+            )
+
+    def reinit(self, message):
         self.message = message
+
         self.chat_id = message.chat.id
 
         if message.reply_to_message:
@@ -102,14 +123,26 @@ class Cerberus:
         if not self.is_user_admin():
             return
 
-        self.send(str(FORBIDDEN_WORDS))
+        query = ForbiddenWord.select()
+
+        self.send(str([fw.word for fw in query]))
 
     def add_forbidden_word(self):
         if not self.is_user_admin():
             return
 
         try:
-            extract_and_add_forbidden_word(self.message)
+            extract_and_add_forbidden_word(self.message.text)
+            self.send("Список запрещенных слов обновлен!")
+        except ValueError as err:
+            self.reply(str(err.args))
+
+    def remove_forbidden_word(self):
+        if not self.is_user_admin():
+            return
+
+        try:
+            extract_and_remove_forbidden_word(self.message.text)
             self.send("Список запрещенных слов обновлен!")
         except ValueError as err:
             self.reply(str(err.args))
@@ -138,9 +171,8 @@ def extract_duration(text):
     return duration
 
 
-def extract_and_add_forbidden_word(text):
-    global FORBIDDEN_WORDS
-    args_list = text.split()
+def extract_and_add_forbidden_word(text: str):
+    args_list = text.strip().split()
 
     if len(args_list) == 1:
         raise ValueError("Не указано запрещенное слово")
@@ -148,7 +180,7 @@ def extract_and_add_forbidden_word(text):
     forbidden_word = args_list[1].lower()
     forbidden_word_offset = 0
 
-    if len(args_list) == 2:
+    if len(args_list) == 3:
         try:
             forbidden_word_offset = int(args_list[2])
         except Exception as exc:
@@ -159,4 +191,16 @@ def extract_and_add_forbidden_word(text):
     if forbidden_word_offset != 0:
         forbidden_word = forbidden_word[0:-forbidden_word_offset]
 
-    FORBIDDEN_WORDS.append(forbidden_word)
+    ForbiddenWord.create(word=forbidden_word)
+
+
+def extract_and_remove_forbidden_word(text: str):
+    args_list = text.strip().split()
+
+    if len(args_list) == 1:
+        raise ValueError("Не указано запрещенное слово")
+
+    forbidden_word = args_list[1].lower()
+
+    fw = ForbiddenWord.get(ForbiddenWord.word == forbidden_word)
+    fw.delete_instance()

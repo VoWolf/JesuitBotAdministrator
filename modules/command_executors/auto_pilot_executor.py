@@ -1,7 +1,6 @@
 import time
 
 from modules.command_executors.admin_check_executor import check_admin
-from modules.constants.words import FORBIDDEN_WORDS
 from modules.instances.bot_instance import bot as cerberus
 
 
@@ -13,7 +12,6 @@ class AutoPilotData:
         self.mute_break_time: int = mute_break_time
         self.autopilot_is_on: bool = auto_is_on
         self.warned_users: dict = {}
-        self.forbidden_words = FORBIDDEN_WORDS
 
     @staticmethod
     def check_warned_users():

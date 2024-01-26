@@ -1,37 +1,47 @@
 import modules.command_executors.auto_pilot_executor
 import modules.command_executors.message_check_executor
 import modules.command_executors.vote_executor
+from modules.db.database import create_tables
 from modules.domain.cerberus import Cerberus
 from modules.instances.bot_instance import bot
+
+create_tables()
+cerberus = Cerberus(None)
 
 
 @bot.message_handler(commands=["append"])
 def append(message):
-    cerberus = Cerberus(message)
+    cerberus.reinit(message)
     cerberus.add_forbidden_word()
+
+
+@bot.message_handler(commands=["remove"])
+def append(message):
+    cerberus.reinit(message)
+    cerberus.remove_forbidden_word()
 
 
 @bot.message_handler(commands=["print_forbidden_words"])
 def print_forbidden_words(message):
-    cerberus = Cerberus(message)
+    cerberus.reinit(message)
     cerberus.print_forbidden_words()
 
 
 @bot.message_handler(commands=["start", "restart"])
 def start(message):
-    cerberus = Cerberus(message)
+    cerberus.reinit(message)
     cerberus.start()
 
 
 @bot.message_handler(commands=["mute"])
 def mute(message):
-    cerberus = Cerberus(message)
+    cerberus.reinit(message)
     cerberus.mute_user()
 
 
 @bot.message_handler(commands=["unmute"])
 def unmute(message):
-    cerberus = Cerberus(message)
+    cerberus.reinit(message)
     cerberus.unmute_user()
 
 
