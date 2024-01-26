@@ -178,10 +178,11 @@ class Cerberus:
         bot.restrict_chat_member(
             self.chat_id,
             self.message_author.user_id,
-            until_date=time.time() + self.pilot.mute_time * 60,
+            until_date=datetime.datetime.now()
+                       + datetime.timedelta(minutes=self.pilot.mute_time),
         )
 
-        self.reply(
+        self.send(
             f"Попуск {self.message_author.username} лишен права отправлять сообщения на "
             f"{self.pilot.mute_time}  минут за повторное наружение правил (Отдыхай)"
         )
@@ -197,8 +198,11 @@ class Cerberus:
                 else:
                     self.message_author.db_user.warnings_count = 1
                     self.message_author.db_user.warnings_valid_until = (
-                            datetime.datetime.now() + self.pilot.mute_break_time
+                            datetime.datetime.now()
+                            + datetime.timedelta(minutes=self.pilot.mute_break_time)
                     )
+                    self.message_author.db_user.save()
+
                     self.send(
                         f"{self.message_author.username}, вы нарушили правила! За повторное нарушение в "
                         f"ближайшие {self.pilot.mute_break_time} минут то вы будете замьючены!"
