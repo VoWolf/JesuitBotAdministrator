@@ -1,3 +1,5 @@
+import datetime
+
 from peewee import *
 
 db = SqliteDatabase("database.db")
@@ -21,14 +23,16 @@ class Pilot(BaseModel):
     mute_break_time = IntegerField()
 
 
-class User(BaseModel):
+class TgUser(BaseModel):
     id = AutoField()
     telegram_id = IntegerField()
+    chat_id = CharField()
+    username = CharField()
     warnings_count = IntegerField()
-    warnings_valid_until = DateTimeField()
+    warnings_valid_until = DateTimeField(default=datetime.datetime.now)
 
 
 def create_tables():
     db.connect()
     with db:
-        db.create_tables([ForbiddenWord, Pilot])
+        db.create_tables([ForbiddenWord, Pilot, TgUser])

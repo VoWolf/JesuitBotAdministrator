@@ -18,6 +18,7 @@ class Cerberus:
             self.reply_to_message_author = User(
                 username=message.reply_to_message.from_user.username,
                 user_id=message.reply_to_message.from_user.id,
+                chat_id=message.chat.id,
             )
         else:
             self.reply_to_message_author = None
@@ -25,7 +26,11 @@ class Cerberus:
         self.message_author = User(
             username=message.from_user.username,
             user_id=message.from_user.id,
+            chat_id=message.chat.id,
         )
+
+        fws = ForbiddenWord.select()
+        self.forbidden_words = [fw.word for fw in fws]
 
     def send(self, text):
         """Sends new message"""
@@ -68,6 +73,11 @@ class Cerberus:
             func(self)
 
         return inner
+
+    def refresh_forbidden_words(self):
+        """Reloads forbidden words from database"""
+        fws = ForbiddenWord.select()
+        self.forbidden_words = [fw.word for fw in fws]
 
     @reply_user_guard
     @admin_guard
@@ -121,6 +131,7 @@ class Cerberus:
         try:
             extract_and_add_forbidden_word(self.message.text)
             self.send("Список запрещенных слов обновлен!")
+            self.refresh_forbidden_words()
         except ValueError as err:
             self.reply(str(err.args))
 
@@ -130,6 +141,7 @@ class Cerberus:
         try:
             extract_and_remove_forbidden_word(self.message.text)
             self.send("Список запрещенных слов обновлен!")
+            self.refresh_forbidden_words()
         except ValueError as err:
             self.reply(str(err.args))
 
@@ -161,6 +173,14 @@ class Cerberus:
         pilot.is_on = False
         pilot.save()
         self.reply("Автомьют отключен!")
+
+    def handle_message(self):
+        """Controls message for forbidden words"""
+        print("Nothing")
+
+    def check_message_for_forbidden_words(self):
+        """Checks if message contains one of forbidden words"""
+        print("Nothing")
 
 
 def extract_pilot_params(text: str):
