@@ -8,11 +8,12 @@ from modules.instances.bot_instance import bot
 
 @bot.message_handler(commands=["append"])
 def append(message):
-    modules.services.bot_service.append(message)
+    cerberus = Cerberus(message)
+    cerberus.add_forbidden_word()
 
 
 @bot.message_handler(commands=["print_forbidden_words"])
-def append(message):
+def print_forbidden_words(message):
     cerberus = Cerberus(message)
     cerberus.print_forbidden_words()
 

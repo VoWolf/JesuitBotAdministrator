@@ -1,6 +1,5 @@
 import time
 
-from modules.constants.words import FORBIDDEN_WORDS
 from modules.domain.user import User
 from modules.instances.bot_instance import bot
 
@@ -33,6 +32,10 @@ class Cerberus:
         """Sends start message"""
         self.send("Привет! Я бот администратор, помогаю управлять чатом:)")
 
+    def reply(self, text: str):
+        """Replies to message"""
+        bot.reply_to(self.message, text)
+
     def is_user_admin(self):
         """Checks if user is admin"""
         if not self.message_author.is_admin:
@@ -40,22 +43,23 @@ class Cerberus:
             return False
         return True
 
-    def reply(self, text: str):
-        """Replies to message"""
-        bot.reply_to(self.message, text)
-
-    def mute_user(self):
-        """Mute user"""
+    def is_reply_to_message_author_exists(self):
+        """Checks if author of reply to message exists"""
         if not self.reply_to_message_author:
             self.reply("Эту команду надо использовать ответом на сообщение!")
+            return False
+        return True
 
+    def mute_user(self):
+        """Mutes user"""
+        if not self.is_reply_to_message_author_exists:
             return
 
         if not self.is_user_admin():
             return
 
         try:
-            duration = extract_duration(self.message.text)
+            mute_duration = extract_duration(self.message.text)
         except ValueError as err:
             self.reply(str(err.args))
 
@@ -65,20 +69,21 @@ class Cerberus:
             bot.restrict_chat_member(
                 self.chat_id,
                 self.reply_to_message_author.user_id,
-                until_date=time.time() + duration * 60,
+                until_date=time.time() + mute_duration * 60,
             )
 
             self.reply(
-                f"Пользователь {self.reply_to_message_author.username} замуьючен на {duration} минут."
+                f"Пользователь {self.reply_to_message_author.username} замуьючен на {mute_duration} минут."
             )
         else:
             self.reply("К сожалению, бога забанить невозможно!")
 
     def unmute_user(self):
-        """Unmute user"""
-        if not self.reply_to_message_author:
-            self.reply("Эту команду надо использовать ответом на сообщение!")
+        """Unmutes user"""
+        if not self.is_reply_to_message_author_exists:
+            return
 
+        if not self.is_user_admin():
             return
 
         bot.restrict_chat_member(
@@ -99,13 +104,20 @@ class Cerberus:
 
         self.send(str(FORBIDDEN_WORDS))
 
+    def add_forbidden_word(self):
+        if not self.is_user_admin():
+            return
+
+        try:
+            extract_and_add_forbidden_word(self.message)
+            self.send("Список запрещенных слов обновлен!")
+        except ValueError as err:
+            self.reply(str(err.args))
+
 
 def extract_duration(text):
     """Extracts second word from string as duration(int)"""
     duration = 5
-
-    if not text:
-        return duration
 
     args_list = text.split()
 
@@ -124,3 +136,27 @@ def extract_duration(text):
         raise ValueError("Максимальное время 24 часа (1440 минут)!")
 
     return duration
+
+
+def extract_and_add_forbidden_word(text):
+    global FORBIDDEN_WORDS
+    args_list = text.split()
+
+    if len(args_list) == 1:
+        raise ValueError("Не указано запрещенное слово")
+
+    forbidden_word = args_list[1].lower()
+    forbidden_word_offset = 0
+
+    if len(args_list) == 2:
+        try:
+            forbidden_word_offset = int(args_list[2])
+        except Exception as exc:
+            raise ValueError(
+                "Произошла ошибка! Скорее всего, ты указал несуществующий индекс!"
+            ) from exc
+
+    if forbidden_word_offset != 0:
+        forbidden_word = forbidden_word[0:-forbidden_word_offset]
+
+    FORBIDDEN_WORDS.append(forbidden_word)
