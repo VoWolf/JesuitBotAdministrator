@@ -26,6 +26,7 @@ class Cerberus:
         )
 
     def send(self, text):
+        """Sends new message"""
         bot.send_message(self.chat_id, text)
 
     def start(self):
@@ -33,12 +34,14 @@ class Cerberus:
         self.send("Привет! Я бот администратор, помогаю управлять чатом:)")
 
     def is_user_admin(self):
+        """Checks if user is admin"""
         if not self.message_author.is_admin:
             self.reply("Ты не можешь этого сделать!)")
             return False
         return True
 
     def reply(self, text: str):
+        """Replies to message"""
         bot.reply_to(self.message, text)
 
     def mute_user(self):
@@ -66,7 +69,7 @@ class Cerberus:
             )
 
             self.reply(
-                f"Пользователь {self.reply_to_message_author.username} замучен на {duration} минут."
+                f"Пользователь {self.reply_to_message_author.username} замуьючен на {duration} минут."
             )
         else:
             self.reply("К сожалению, бога забанить невозможно!")
@@ -90,6 +93,7 @@ class Cerberus:
         self.reply(f"{self.reply_to_message_author.username} освобожден!")
 
     def print_forbidden_words(self):
+        """Prints forbidden words list"""
         if not self.is_user_admin():
             return
 
@@ -97,6 +101,7 @@ class Cerberus:
 
 
 def extract_duration(text):
+    """Extracts second word from string as duration(int)"""
     duration = 5
 
     if not text:
