@@ -1,8 +1,7 @@
 import datetime
-import time
 from typing import Callable
 
-from modules.db.database import ForbiddenWord, Pilot
+from modules.db.database import ForbiddenWord, Pilot, Poll, PollOption
 from modules.domain.user import User
 from modules.instances.bot_instance import bot
 
@@ -14,6 +13,7 @@ class Cerberus:
         self.message = message
 
         self.chat_id = message.chat.id
+        self.chat_members_count = bot.get_chat_member_count(message.chat.id)
 
         if message.reply_to_message:
             self.reply_to_message_author = User(
@@ -94,11 +94,18 @@ class Cerberus:
             return
 
         if self.reply_to_message_author.can_be_muted:
+            muted_until = datetime.datetime.now() + datetime.timedelta(
+                minutes=mute_duration
+            )
+
             bot.restrict_chat_member(
                 self.chat_id,
                 self.reply_to_message_author.user_id,
-                until_date=time.time() + mute_duration * 60,
+                until_date=muted_until,
             )
+
+            self.reply_to_message_author.db_user.is_muted_until = muted_until
+            self.reply_to_message_author.db_user.save()
 
             self.reply(
                 f"Пользователь {self.reply_to_message_author.username} замуьючен на {mute_duration} минут."
@@ -124,9 +131,7 @@ class Cerberus:
     @admin_guard
     def print_forbidden_words(self):
         """Prints forbidden words list"""
-        query = ForbiddenWord.select()
-
-        self.send(str([fw.word for fw in query]))
+        self.send(str(self.forbidden_words))
 
     @admin_guard
     def add_forbidden_word(self):
@@ -175,12 +180,18 @@ class Cerberus:
         self.reply("Автомьют отключен!")
 
     def automute_user(self):
+        muted_until = datetime.datetime.now() + datetime.timedelta(
+            minutes=self.pilot.mute_time
+        )
+
         bot.restrict_chat_member(
             self.chat_id,
             self.message_author.user_id,
-            until_date=datetime.datetime.now()
-                       + datetime.timedelta(minutes=self.pilot.mute_time),
+            until_date=muted_until,
         )
+
+        self.message_author.db_user.is_muted_until = muted_until
+        self.message_author.db_user.save()
 
         self.send(
             f"Попуск {self.message_author.username} лишен права отправлять сообщения на "
@@ -217,6 +228,33 @@ class Cerberus:
                 return True
 
         return False
+
+    @reply_user_guard
+    def start_unmute_poll(self):
+        if not self.reply_to_message_author.is_muted:
+            return
+
+        question = f"Размьютить пользователя {self.reply_to_message_author.username}?"
+
+        result = bot.send_poll(
+            chat_id=self.chat_id,
+            question=question,
+            options=["Да", "Нет"],
+        )
+        bot.delete_message(self.message.id)
+
+        poll = Poll.create(
+            question=question,
+            is_closed=False,
+            tg_message_id=result.message_id,
+            tg_poll_id=result.poll.id,
+        )
+
+        PollOption.create(text="Да", voter_count=0, poll=poll)
+        PollOption.create(text="Нет", voter_count=0, poll=poll)
+
+    def handle_poll(self, call):
+        print(call)
 
 
 def extract_pilot_params(text: str):

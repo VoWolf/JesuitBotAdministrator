@@ -32,3 +32,7 @@ class User:
                 self.db_user.warnings_count > 0
                 and self.db_user.warnings_valid_until > datetime.datetime.now()
         )
+        self.is_muted = (
+                self.db_user.is_muted_until
+                and self.db_user.is_muted_until > datetime.datetime.now()
+        )

@@ -55,8 +55,8 @@ def auto_pilot(message):
 
 @bot.message_handler(commands=["vote"])
 def vote(message):
-    print("huj")
-    # modules.command_executors.vote_executor.vote(message)
+    cerberus = Cerberus(message)
+    cerberus.start_unmute_poll()
 
 
 @bot.message_handler(func=lambda message: True)
@@ -69,6 +69,13 @@ def message_handler(message):
 def callback(call):
     print("huj")
     # modules.command_executors.vote_executor.callback_handler(call)
+
+
+@bot.poll_handler(func=lambda call: True)
+def callback(call):
+    print(call)
+    print(call.options[0])
+    print(call.options[1])
 
 
 bot.infinity_polling(none_stop=True)
