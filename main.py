@@ -1,77 +1,197 @@
-import modules.command_executors.vote_executor
+"""Главный файл; рабочий цикл здесь"""
+
 
 from modules.db.database import create_tables
 from modules.domain.cerberus import Cerberus
 from modules.instances.bot_instance import bot
 
-create_tables()в
-
-
-@bot.message_handler(commands=["append"])
-def append(message):
-    cerberus = Cerberus(message)
-    bot.delete_message(cerberus.chat_id, cerberus.message.id - 1)
-    cerberus.add_forbidden_word()
-
-
-@bot.message_handler(commands=["remove"])
-def remove(message):
-    cerberus = Cerberus(message)
-    cerberus.remove_forbidden_word()
-
-
-@bot.message_handler(commands=["print_forbidden_words"])
-def print_forbidden_words(message):
-    cerberus = Cerberus(message)
-    cerberus.print_forbidden_words()
+create_tables()
 
 
 @bot.message_handler(commands=["start", "restart"])
 def start(message):
+    """
+    Отправляет сообщение
+    :param message:
+    :return:
+    """
     cerberus = Cerberus(message)
     cerberus.start()
 
 
+@bot.message_handler(commands=["print_forbidden_words"])  # Функция разработчика
+def print_forbidden_words(message):
+    """
+    Печатает список стоп-слов, тестовая функция
+    :param message:
+    :return:
+    """
+    cerberus = Cerberus(message)
+    cerberus.print_forbidden_words()
+
+
 @bot.message_handler(commands=["mute"])
 def mute(message):
+    """
+    Мьютит пользователя (применяется ответом на сообщение)
+    :param message:
+    :return:
+    """
     cerberus = Cerberus(message)
     cerberus.mute_user()
 
 
 @bot.message_handler(commands=["unmute"])
 def unmute(message):
+    """
+    Размьючивает пользователя (применяется ответом на сообщение)
+    :param message:
+    :return:
+    """
     cerberus = Cerberus(message)
     cerberus.unmute_user()
 
 
-@bot.message_handler(commands=["auto_on"])
-def auto_pilot(message):
-    cerberus = Cerberus(message)
-    cerberus.turn_pilot_on()
-
-
-@bot.message_handler(commands=["auto_off"])
-def auto_pilot(message):
-    cerberus = Cerberus(message)
-    cerberus.turn_pilot_off()
-
-
 @bot.message_handler(commands=["vote"])
-def vote(message):
-    # print("huj")
-    modules.command_executors.vote_executor.vote(message)
+def vote():
+    """
+    Начинает голосование за размьют пользователя
+    :return:
+    """
+    print("huj")
+
+
+@bot.message_handler(commands=["delete_inactive_chat_members"])
+def delete_inactive_chat_members():
+    """
+    Путем взаимодействия с Ирисом получает список
+    неактивных участников и удаляет всех кто не в сети больше 1.5
+    дней
+    :return:
+    """
+    print("huj")
+
+
+@bot.message_handler(commands=["my_rating"])
+def my_rating():
+    """
+    Отправляет в чат рейтинг пользователя
+    :return:
+    """
+    print("huj")
+
+
+@bot.message_handler(commands=["add_forbidden_word"])
+def add_forbidden_word():
+    """
+    Добавляет стоп-слово введенное после команды
+    :return:
+    """
+    print("huj")
+
+
+@bot.message_handler(commands=["delete_forbidden_word"])
+def delete_forbidden_word():
+    """
+    Удалеят стоп-слово введенное после команды
+    :return:
+    """
+    print("huj")
+
+
+@bot.message_handler(commands=["rating_change"])
+def rating_change():
+    """
+    Изменяет рейтинг выбранного пользователя
+    :return:
+    """
+    print("huj")
+
+
+@bot.message_handler(commands=["activate"])
+def activate():
+    """
+    Запоминает всех участников чата, присваивает рейтинги и т. д.
+    :return:
+    """
+    print("huj")
+
+
+@bot.message_handler(commands=["tie_chats"])
+def tie_chats():
+    """
+    Начинает связывание чатов, отправляет токен для привязки
+    :return:
+    """
+    print("huj")
+
+
+@bot.message_handler(commands=["snap_chats"])
+def snap_chats():
+    """
+    Заканчивает связывание чатов
+    :return:
+    """
+    print("huj")
+
+
+@bot.message_handler(commands=["autodelete_speed"])
+def autodelete_speed():
+    """
+    Регулирует авто удаление технических сообщений от бота
+    :return:
+    """
+    print("huj")
+
+
+@bot.message_handler(commands=["tag"])
+def tag():
+    """
+    Добавляет отмеченного участка в список тех, кого бот будет
+    отмечать при подозрениях к участникам
+    :return:
+    """
+    print("huj")
+
+
+@bot.message_handler(commands=["do_not_tag"])
+def do_not_tag():
+    """
+    Удаляет отмеченного участка в список тех, кого бот будет
+    отмечать при подозрениях к участникам
+    :return:
+    """
+    print("huj")
+
+
+@bot.message_handler(commands=["remember_admins"])
+def remember_admins():
+    """
+    Вносит в базу данных всех участников чата как
+    администраторов
+    :return:
+    """
+    print("huj")
 
 
 @bot.message_handler(func=lambda message: True)
 def message_handler(message):
+    """
+    Откликается на каждое текстовое сообщение; проверяет их
+    :param message:
+    :return:
+    """
     cerberus = Cerberus(message)
     cerberus.handle_message()
 
 
 @bot.callback_query_handler(func=lambda call: True)
-def callback(call):
+def callback():
+    """
+    Реагирует на нажатие инлайн кнопок
+    :return:
+    """
     print("huj")
-    # modules.command_executors.vote_executor.callback_handler(call)
 
 
 bot.infinity_polling(none_stop=True)

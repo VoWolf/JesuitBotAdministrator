@@ -1,6 +1,8 @@
+"""Создает объект User с данными о пользователе"""
+
 import datetime
 
-from modules.constants.users import ADMINS, USERS_PROTECTED_FROM_MUTE
+from modules.constants.users import ADMINS
 from modules.db.database import TgUser, TgUserRating
 
 

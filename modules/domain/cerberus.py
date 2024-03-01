@@ -1,8 +1,10 @@
+"""Объявляет объект класса бота (Cerberus)"""
+
 import datetime
 import time
 from typing import Callable
 
-from modules.db.database import ForbiddenWord, Pilot
+from modules.db.database import ForbiddenWord
 from modules.domain.user import User
 from modules.instances.bot_instance import bot
 
@@ -50,8 +52,6 @@ class Cerberus:
 
         fws = ForbiddenWord.select()
         self.forbidden_words = [fw.word for fw in fws]
-
-        self.pilot = Pilot.get(Pilot.name == "autopilot")
 
     def send(self, text):
         """Sends new message"""

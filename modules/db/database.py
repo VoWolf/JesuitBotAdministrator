@@ -1,3 +1,5 @@
+"""В данном файле создаются таблицы в базе данных бота"""
+
 from peewee import *
 
 db = SqliteDatabase("database.db")
