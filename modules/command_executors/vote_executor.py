@@ -47,7 +47,7 @@ class VoteData:
                 self.message_to_edit_id + 1,
                 reply_markup=buttons,
             )
-        except:
+        except Exception:
             cerberus.send_message(
                 message.chat.id,
                 f"ГОЛОСОВАНИЕ\nРазмутить {self.userdata.username}?\nДа: "

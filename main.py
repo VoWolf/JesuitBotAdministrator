@@ -1,13 +1,16 @@
+import modules.command_executors.vote_executor
+
 from modules.db.database import create_tables
 from modules.domain.cerberus import Cerberus
 from modules.instances.bot_instance import bot
 
-create_tables()
+create_tables()в
 
 
 @bot.message_handler(commands=["append"])
 def append(message):
     cerberus = Cerberus(message)
+    bot.delete_message(cerberus.chat_id, cerberus.message.id - 1)
     cerberus.add_forbidden_word()
 
 
@@ -55,8 +58,8 @@ def auto_pilot(message):
 
 @bot.message_handler(commands=["vote"])
 def vote(message):
-    print("huj")
-    # modules.command_executors.vote_executor.vote(message)
+    # print("huj")
+    modules.command_executors.vote_executor.vote(message)
 
 
 @bot.message_handler(func=lambda message: True)

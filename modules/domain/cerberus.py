@@ -7,6 +7,24 @@ from modules.domain.user import User
 from modules.instances.bot_instance import bot
 
 
+def admin_guard(func: Callable):
+    def inner(self):
+        if not self.is_user_admin():
+            return
+        func(self)
+
+    return inner
+
+
+def reply_user_guard(func: Callable):
+    def inner(self):
+        if not self.is_reply_to_message_author_exists():
+            return
+        func(self)
+
+    return inner
+
+
 class Cerberus:
     """Bot class"""
 
@@ -60,22 +78,6 @@ class Cerberus:
             self.reply("Эту команду надо использовать ответом на сообщение!")
             return False
         return True
-
-    def admin_guard(func: Callable):
-        def inner(self):
-            if not self.is_user_admin():
-                return
-            func(self)
-
-        return inner
-
-    def reply_user_guard(func: Callable):
-        def inner(self):
-            if not self.is_reply_to_message_author_exists():
-                return
-            func(self)
-
-        return inner
 
     def refresh_forbidden_words(self):
         """Reloads forbidden words from database"""
@@ -269,7 +271,7 @@ def extract_duration(text: str):
 
 
 def extract_and_add_forbidden_word(text: str):
-    args_list = text.strip().split()
+    args_list = list(map(str.strip, text.strip().split()))
 
     if len(args_list) == 1:
         raise ValueError("Не указано запрещенное слово")
@@ -297,7 +299,22 @@ def extract_and_remove_forbidden_word(text: str):
     if len(args_list) == 1:
         raise ValueError("Не указано запрещенное слово")
 
-    forbidden_word = args_list[1].lower()
+    if len(args_list) == 3:
+        print("1")
+        try:
+            ForbiddenWord.delete_by_id(int(args_list[2]))
+        except Exception as exc:
+            raise ValueError(
+                "Произошла ошибка! Скорее всего, ты указал несуществующий индекс!"
+            ) from exc
+    else:
+        forbidden_word = args_list[1].lower()
 
-    fw = ForbiddenWord.get(ForbiddenWord.word == forbidden_word)
-    fw.delete_instance()
+
+        try:
+            fw = ForbiddenWord.get(ForbiddenWord.word == forbidden_word)
+        except Exception:
+            raise ValueError(
+                "Данного слова нет в базе!"
+            )
+        fw.delete_instance()
