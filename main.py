@@ -30,48 +30,6 @@ def print_forbidden_words(message):
     cerberus.print_forbidden_words()
 
 
-@bot.message_handler(commands=["mute"])
-def mute(message):
-    """
-    Мьютит пользователя (применяется ответом на сообщение)
-    :param message:
-    :return:
-    """
-    cerberus = Cerberus(message)
-    cerberus.mute_user()
-
-
-@bot.message_handler(commands=["unmute"])
-def unmute(message):
-    """
-    Размьючивает пользователя (применяется ответом на сообщение)
-    :param message:
-    :return:
-    """
-    cerberus = Cerberus(message)
-    cerberus.unmute_user()
-
-
-@bot.message_handler(commands=["vote"])
-def vote():
-    """
-    Начинает голосование за размьют пользователя
-    :return:
-    """
-    print("huj")
-
-
-@bot.message_handler(commands=["delete_inactive_chat_members"])
-def delete_inactive_chat_members():
-    """
-    Путем взаимодействия с Ирисом получает список
-    неактивных участников и удаляет всех кто не в сети больше 1.5
-    дней
-    :return:
-    """
-    print("huj")
-
-
 @bot.message_handler(commands=["my_rating"])
 def my_rating():
     """
@@ -103,15 +61,6 @@ def delete_forbidden_word():
 def rating_change():
     """
     Изменяет рейтинг выбранного пользователя
-    :return:
-    """
-    print("huj")
-
-
-@bot.message_handler(commands=["activate"])
-def activate():
-    """
-    Запоминает всех участников чата, присваивает рейтинги и т. д.
     :return:
     """
     print("huj")

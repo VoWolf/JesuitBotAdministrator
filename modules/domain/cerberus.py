@@ -1,6 +1,5 @@
-"""Объявляет объект класса бота (Cerberus)"""
+"""Объявляет класс бота (Cerberus)"""
 
-import datetime
 import time
 from typing import Callable
 
@@ -10,6 +9,12 @@ from modules.instances.bot_instance import bot
 
 
 def admin_guard(func: Callable):
+    """
+    Декоратор для проверки является ли пользователь
+    администратором
+    :param func:
+    :return:
+    """
     def inner(self):
         if not self.is_user_admin():
             return
@@ -19,6 +24,12 @@ def admin_guard(func: Callable):
 
 
 def reply_user_guard(func: Callable):
+    """
+    Декоратор для проверки используется ли команда ответом
+    на сообщение
+    :param func:
+    :return:
+    """
     def inner(self):
         if not self.is_reply_to_message_author_exists():
             return
@@ -30,50 +41,70 @@ def reply_user_guard(func: Callable):
 class Cerberus:
     """Bot class"""
 
-    def __init__(self, message):
+    def __init__(self, message, user=False, message_form=False, forbidden_words=False):
         self.message = message
-
         self.chat_id = message.chat.id
 
-        if message.reply_to_message:
-            self.reply_to_message_author = User(
-                username=message.reply_to_message.from_user.username,
-                user_id=message.reply_to_message.from_user.id,
-                chat_id=message.chat.id,
+        if user:
+            if message.reply_to_message:
+                self.reply_to_message_author = User(
+                    user_id=message.reply_to_message.from_user.id,
+                    chat_id=message.chat.id
+                )
+            else:
+                self.reply_to_message_author = None
+
+            self.message_author = User(
+                user_id=message.from_user.id,
+                chat_id=message.chat.id
             )
-        else:
-            self.reply_to_message_author = None
 
-        self.message_author = User(
-            username=message.from_user.username,
-            user_id=message.from_user.id,
-            chat_id=message.chat.id,
-        )
+        if message_form:
+            pass
 
-        fws = ForbiddenWord.select()
-        self.forbidden_words = [fw.word for fw in fws]
+        if forbidden_words:
+            pass
 
     def send(self, text):
-        """Sends new message"""
+        """
+        Отправляет новое сообщение
+        :param text:
+        :return:
+        """
         bot.send_message(self.chat_id, text)
 
     def start(self):
-        """Sends start message"""
+        """
+        Отправляет сообщение по команде
+        /start
+        :return:
+        """
         self.send("Привет! Я бот администратор, помогаю управлять чатом:)")
 
     def reply(self, text: str):
-        """Replies to message"""
+        """
+        Отвечает на сообщение
+        :param text:
+        :return:
+        """
         bot.reply_to(self.message, text)
 
     def is_user_admin(self):
-        """Checks if user is admin"""
+        """
+        Проверяет, является ли пользователь администратором
+        :return: True если пользователь администратор, False если пользователь не администратор
+        """
         if not self.message_author.is_admin:
             self.reply("Ты не можешь этого сделать!)")
             return False
         return True
 
     def is_reply_to_message_author_exists(self):
-        """Checks if author of reply to message exists"""
+        """
+        Проверяет, использована ли
+        команда ответом на сообщение
+        :return:
+        """
         if not self.reply_to_message_author:
             self.reply("Эту команду надо использовать ответом на сообщение!")
             return False
@@ -81,47 +112,7 @@ class Cerberus:
 
     def refresh_forbidden_words(self):
         """Reloads forbidden words from database"""
-        fws = ForbiddenWord.select()
-        self.forbidden_words = [fw.word for fw in fws]
-
-    @reply_user_guard
-    @admin_guard
-    def mute_user(self):
-        """Mutes user"""
-        try:
-            mute_duration = extract_duration(self.message.text)
-        except ValueError as err:
-            self.reply(str(err.args))
-
-            return
-
-        if self.reply_to_message_author.can_be_muted:
-            bot.restrict_chat_member(
-                self.chat_id,
-                self.reply_to_message_author.user_id,
-                until_date=time.time() + mute_duration * 60,
-            )
-
-            self.reply(
-                f"Пользователь {self.reply_to_message_author.username} замуьючен на {mute_duration} минут."
-            )
-        else:
-            self.reply("К сожалению, бога забанить невозможно!")
-
-    @reply_user_guard
-    @admin_guard
-    def unmute_user(self):
-        """Unmutes user"""
-        bot.restrict_chat_member(
-            self.chat_id,
-            self.reply_to_message_author.user_id,
-            can_send_messages=True,
-            can_send_media_messages=True,
-            can_send_other_messages=True,
-            can_add_web_page_previews=True,
-        )
-
-        self.reply(f"{self.reply_to_message_author.username} освобожден!")
+        pass
 
     @admin_guard
     def print_forbidden_words(self):
@@ -150,75 +141,9 @@ class Cerberus:
         except ValueError as err:
             self.reply(str(err.args))
 
-    @admin_guard
-    def turn_pilot_on(self):
-        """Turns autopilot on"""
-        try:
-            mute_time, mute_break_time = extract_pilot_params(self.message.text)
-        except ValueError as err:
-            self.reply(str(err.args))
-            return
-
-        self.pilot.is_on = True
-        self.pilot.mute_time = mute_time
-        self.pilot.mute_break_time = mute_break_time
-        self.pilot.save()
-
-        self.reply(
-            f"Автомьют включен!\nСведения:\nВремя между предупреждениями: {mute_break_time} "
-            f"минут\nВремя автомьюта: {mute_time} минут"
-        )
-
-    @admin_guard
-    def turn_pilot_off(self):
-        """Turns autopilot off"""
-        self.pilot.is_on = False
-        self.pilot.save()
-        self.reply("Автомьют отключен!")
-
-    def automute_user(self):
-        bot.restrict_chat_member(
-            self.chat_id,
-            self.message_author.user_id,
-            until_date=datetime.datetime.now()
-                       + datetime.timedelta(minutes=self.pilot.mute_time),
-        )
-
-        self.send(
-            f"Попуск {self.message_author.username} лишен права отправлять сообщения на "
-            f"{self.pilot.mute_time}  минут за повторное наружение правил (Отдыхай)"
-        )
-
     def handle_message(self):
         """Controls message for forbidden words"""
-        if self.is_forbidden_word_in_message(self.message.text):
-            bot.delete_message(self.chat_id, self.message.id)
-
-            if self.pilot.is_on:
-                if self.message_author.has_active_warnings:
-                    self.automute_user()
-                else:
-                    self.message_author.db_user.warnings_count = 1
-                    self.message_author.db_user.warnings_valid_until = (
-                            datetime.datetime.now()
-                            + datetime.timedelta(minutes=self.pilot.mute_break_time)
-                    )
-                    self.message_author.db_user.save()
-
-                    self.send(
-                        f"{self.message_author.username}, вы нарушили правила! За повторное нарушение в "
-                        f"ближайшие {self.pilot.mute_break_time} минут то вы будете замьючены!"
-                    )
-            else:
-                self.send(f"Сообщение от {self.message_author.username} скрыто")
-
-    def is_forbidden_word_in_message(self, text: str):
-        """Checks if message contains one of forbidden words"""
-        for el in self.forbidden_words:
-            if el in text.lower():
-                return True
-
-        return False
+        pass
 
 
 def extract_pilot_params(text: str):

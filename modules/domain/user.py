@@ -4,6 +4,21 @@ import time
 from modules.db.database import TgUser, TgUserRating, Chats
 
 
+def admin_do_not_banned_guard(func):
+    """
+    Декоратор для проверки является ли
+    пользователь администратором
+    :param func:
+    :return:
+    """
+    def inner(self):
+        if self.is_admin():
+            return
+        func(self)
+
+    return inner
+
+
 class User:
     """
         Класс пользователя.
@@ -54,33 +69,40 @@ class User:
             in_Chats_table=Chats.get(id=id_in_chats)
         )
 
-    def mute(self, bot, mute_duration):
+    @admin_do_not_banned_guard
+    def kick_user(self, bot):
         """
-        Мьютит пользователя
+        Выгоняет данного пользователя из чата с возможностью возврата
         :param bot:
-        :param mute_duration:
         :return:
         """
-        self.down_chat_member_rang(bot)
-        bot.restrict_chat_member(
-            self.chat_id,
-            self.user_id,
-            until_date=time.time() + mute_duration * 60,
+        bot.ban_chat_member(
+            chat_id=self.chat_id,
+            user_id=self.user_id,
+            until_date=time.time() + 30,
+            revoke_messages=False
+        )
+        bot.unban_chat_member(
+            chat_id=self.chat_id,
+            user_id=self.user_id,
+            only_if_banned=False
         )
 
-    def unmute(self, bot):
+    @admin_do_not_banned_guard
+    def ban_user(self, bot, duration, delete_messages_from_this_user):
         """
-        Размьючивает пользователя
+         Выгоняет данного пользователя из чата
+         без возможности возврата (вносит в черный список чата) на определенное время
         :param bot:
+        :param duration:
+        :param delete_messages_from_this_user:
         :return:
         """
-        bot.restrict_chat_member(
-            self.chat_id,
-            self.user_id,
-            can_send_messages=True,
-            can_send_media_messages=True,
-            can_send_other_messages=True,
-            can_add_web_page_previews=True,
+        bot.ban_chat_member(
+            chat_id=self.chat_id,
+            user_id=self.user_id,
+            until_date=duration,
+            revoke_messages=delete_messages_from_this_user
         )
 
     def up_rating(self, up_value=0.01):
@@ -107,77 +129,30 @@ class User:
         if down_toxic_rating:
             self.db_user.in_TgUserRating_table.toxic_rating -= down_value
 
-    def down_chat_member_rang(self, bot):
+    def check_rating(self, rating_type):
         """
-        Понижает указанного пользователя
-        :param bot:
-        :return:
-        """
-        bot.promote_chat_member(
-            chat_id=self.chat_id,
-            user_id=self.user_id
-        )
+        Проверяет рейтинг данного пользователя
 
-    def up_chat_member_rang(self, bot):
-        """
-        Повышает указанного пользователя
-        :param bot:
-        :return:
-        """
-        # Здесь бот повышает участника, ДОБАВИТЬ
-        bot.set_chat_administrator_custom_title(
-            chat_id=self.chat_id,
-            user_id=self.user_id,
-            custom_title=self.userrang
-        )
+        1 - рейтинг выше 1.00
 
-# promote_chat_member
-# ПАРАМЕТРЫ:
-# chat_id (int or str) – Уникальный id чата или username канала (в формате @channelusername)
-#
-# user_id (int) – Уникальный id сделавшего запрос пользователя
-#
-# can_change_info (bool) – Передайте True, если администратор может менять название чата, аватарку и другие настройки
-#
-# can_post_messages (bool) – Передайте True, если администратор может создавать посты в канале, только для каналов
-#
-# can_edit_messages (bool) – Передайте True, если администратор может изменять сообщения других пользователей, только для каналов
-#
-# can_delete_messages (bool) – Передайте True, если администратор может удалять сообщения других пользователей
-#
-# can_invite_users (bool) – Передайте True, если администратор может приглашать новых пользователей в чат
-#
-# can_restrict_members (bool) – Передайте True, если администратор может ограничивать, банить или разбанивать участников чата
-#
-# can_pin_messages (bool) – Передайте True, если администратор может закреплять сообщения, только для супергрупп
-#
-# can_promote_members (bool) – Передайте True, если администратор может добавлять новых администраторов с подмножеством его собственных прав администратора или понижать администраторов, которых он повысил, напрямую или косвенно (администраторами, которых он назначил)
-#
-# is_anonymous (bool) – Передайте True, если присутствие администратора в чате скрыто
-#
-# can_manage_chat (bool) – Передайте True, если администратор имеет доступ к логу событий чата, статистике чата, статистике сообщений в каналах, видеть участников канала, видеть анонимных администраторов в супергруппах и игнорировать медленный режим. Подразумевается любым другим правом администратора
-#
-# can_manage_video_chats (bool) – Передайте True, если администратор может управлять голосовыми чатами. На текущий момент, боты могут использовать это право администратора только для передачи другим администраторам.
-#
-# can_manage_voice_chats (bool) – Устарело, используйте can_manage_video_chats.
-#
-# can_manage_topics (bool) – Передайте True, если пользователю разрешено создавать, переименовывать, закрывать, и возобновлять топики, только для супергрупп
-#
-# can_post_stories (bool) – Pass True if the administrator can create the channel’s stories
-#
-# can_edit_stories (bool) – Pass True if the administrator can edit the channel’s stories
-#
-# can_delete_stories (bool) – Pass True if the administrator can delete the channel’s stories
-#
-# РЕЗУЛЬТАТ:
-# True в случае успеха.
-#
-# ТИП РЕЗУЛЬТАТА:
-# bool
+        2 - рейтинг выше 0 и ниже 1.00
 
-# set_chat_administrator_custom_title
-# chat_id (int or str) – Уникальный id чата или username супергруппы (в формате @supergroupusername)
-#
-# user_id (int) – Уникальный id сделавшего запрос пользователя
-#
-# custom_title (str) – Новое кастомное звание администратора; 0-16 символов, эмодзи не разрешены
+        3 - рейтинг выше -25 и ниже 0
+
+        4 - рейтинг ниже -25
+
+        5 - рейтинг ниже -50
+        :param rating_type:
+        :return int:
+        """
+        if rating_type is None:
+            return
+        if self.db_user.in_TgUserRating_table.rating_type >= 1.00:
+            return 1
+        if 0.00 <= self.db_user.in_TgUserRating_table.rating_type < 1.00:
+            return 2
+        if -25 <= self.db_user.in_TgUserRating_table.rating_type < 0.00:
+            return 3
+        if -50 <= self.db_user.in_TgUserRating_table.rating_type < -25.00:
+            return 4
+        return 5
