@@ -2,11 +2,13 @@
 
 from peewee import *
 
-db = SqliteDatabase("database.db")
+db = SqliteDatabase("bot_database.db")
 
 
 class BaseModel(Model):
+    """Базовая модель"""
     class Meta:
+        """Параметры базы данных"""
         database = db
 
 
@@ -20,42 +22,10 @@ class ForbiddenWord(BaseModel):
 
         >> word - само слово (текст, str)
     """
+    class Meta:
+        db_table = "ForbiddenWord"
     id = AutoField()
     word = CharField()
-
-
-class TgUser(BaseModel):
-    """
-        Отвечает за таблицу для пользователя Telegram
-
-        Колонки:
-
-        >> id - номер пользователя (автоматическое поле, int)
-
-        >> telegram_id - id пользователя в Telegram (число, int)
-
-        >> chat_id - id чата с пользователем (число, int)
-
-        >> user_name - имя пользователя (текст, str)
-
-        >> user_nik - ник пользователя (текст, str)
-
-        >> user_rang - звание пользователя (текст, str)
-
-        >> id_inTgUserRating - id записей о рейтинге данного пользователя в таблице
-        TgUserRating (число, int)
-
-        >> in_Chats_table_id - id записей о связке чатов данного пользователя в таблице
-        Chats (число, int)
-    """
-    id = AutoField()
-    telegram_id = IntegerField()
-    chat_id = CharField()
-    user_name = CharField()
-    user_nik = CharField()
-    user_rang = CharField()
-    in_TgUserRating_table_id = IntegerField()
-    in_Chats_table_id = IntegerField()
 
 
 class TgUserRating(BaseModel):
@@ -72,6 +42,8 @@ class TgUserRating(BaseModel):
         >> toxic_rating - Рейтинг пользователя относительно токсичности,
         по умолчанию ставить 1.00 (число, float)
     """
+    class Meta:
+        db_table = "TgUserRating"
     id = AutoField()
     spam_rating = FloatField()
     toxic_rating = FloatField()
@@ -89,28 +61,56 @@ class Chats(BaseModel):
 
         >> main_chat_control_id - id основного чата с участниками (число, int)
     """
+    class Meta:
+        db_table = "Chats"
     id = AutoField()
     admin_chat_id = IntegerField()
     main_chat_control_id = IntegerField()
 
 
-class AdminTags(BaseModel):
+class TgUser(BaseModel):
     """
-        id - номер записи (автоматическое поле, int)
-        user_names_list - Строка с именами пользователей
-        для отметки (Разделитель: '::')
+        Отвечает за таблицу для пользователя Telegram
+
+        Колонки:
+
+        >> id - номер пользователя (автоматическое поле, int)
+
+        >> telegram_id - id пользователя в Telegram (число, int)
+
+        >> user_name - имя пользователя (текст, str)
+
+        >> user_nik - ник пользователя (текст, str)
+
+        >> user_rang - звание пользователя (текст, str)
+
+        >> id_inTgUserRating - id записей о рейтинге данного пользователя в таблице
+        TgUserRating (число, int)
+
+        >> in_Chats_table_id - id записей о связке чатов данного пользователя в таблице
+        Chats (число, int)
     """
+    class Meta:
+        db_table = "TgUser"
     id = AutoField()
-    user_names_list = CharField()
+    user_name = CharField(max_length=32)
+    user_nik = CharField(max_length=128)
+    user_rang = CharField(max_length=16)
+    is_admin = BooleanField()
+    telegram_id = IntegerField()
+    in_TgUserRating_table = ForeignKeyField(TgUserRating)
+    in_Chats_table = ForeignKeyField(Chats)
 
 
-class BorsMessages(BaseModel):
+class BotsMessages(BaseModel):
     """
         id - номер записи (автоматическое поле, int)
         message_id - id сообщения бота (число, int)
         time_until - время до которого сообщение должно существовать в чате
         (время, datetime)
     """
+    class Meta:
+        db_table = "BotsMessages"
     id = AutoField()
     message_id = IntegerField()
     time_until = DateTimeField()
@@ -123,4 +123,4 @@ def create_tables():
     """
     db.connect()
     with db:
-        db.create_tables([ForbiddenWord, TgUser, TgUserRating, Chats])
+        db.create_tables([ForbiddenWord, TgUserRating, Chats, TgUser, BotsMessages])
