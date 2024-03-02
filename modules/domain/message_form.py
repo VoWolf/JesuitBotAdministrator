@@ -1,7 +1,8 @@
 """Объявляет класс MessageForm"""
 
 import time
-from modules.db.database import ForbiddenWord, BotsMessages
+from modules.db.database import BotsMessages
+from modules.domain.forbidden_words import ForbiddenWords
 
 
 class MessageForm:
@@ -28,9 +29,8 @@ class MessageForm:
         получает список запрещенных слов
         :return:
         """
-        return [
-            value.word for value in ForbiddenWord.select()
-        ]
+        fws = ForbiddenWords()
+        return fws.return_forbidden_words()
 
     @staticmethod
     def return_ready_message_text(sample, **text_values):
