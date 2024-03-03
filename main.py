@@ -15,7 +15,12 @@ def start(message):
     :param message:
     :return:
     """
-    cerberus = Cerberus(message)
+    cerberus = Cerberus(
+        message=message,
+        user=False,
+        message_form=True,
+        forbidden_words=False
+    )
     cerberus.start()
 
 
@@ -31,96 +36,140 @@ def print_forbidden_words(message):
 
 
 @bot.message_handler(commands=["my_rating"])
-def my_rating():
+def my_rating(message):
     """
     Отправляет в чат рейтинг пользователя
     :return:
     """
-    print("huj")
+    cerberus = Cerberus(
+        message=message,
+        user=True,
+        message_form=True,
+        forbidden_words=False
+    )
+    cerberus.my_rating()
 
 
 @bot.message_handler(commands=["add_forbidden_word"])
-def add_forbidden_word():
+def add_forbidden_word(message):
     """
     Добавляет стоп-слово введенное после команды
     :return:
     """
-    print("huj")
+    cerberus = Cerberus(
+        message=message,
+        user=False,
+        message_form=True,
+        forbidden_words=True
+    )
+    cerberus.extract_and_add_forbidden_word()
 
 
 @bot.message_handler(commands=["delete_forbidden_word"])
-def delete_forbidden_word():
+def delete_forbidden_word(message):
     """
     Удалеят стоп-слово введенное после команды
     :return:
     """
-    print("huj")
+    cerberus = Cerberus(
+        message=message,
+        user=False,
+        message_form=True,
+        forbidden_words=True
+    )
+    cerberus.extract_and_remove_forbidden_word()
 
 
 @bot.message_handler(commands=["rating_change"])
-def rating_change():
+def rating_change(message):
     """
-    Изменяет рейтинг выбранного пользователя
+    Изменяет спам рейтинг выбранного пользователя
     :return:
     """
-    print("huj")
+    cerberus = Cerberus(
+        message=message,
+        user=True,
+        message_form=True,
+        forbidden_words=False
+    )
+    cerberus.extract_and_change_rating()
 
 
 @bot.message_handler(commands=["tie_chats"])
-def tie_chats():
+def tie_chats(message):
     """
     Начинает связывание чатов, отправляет токен для привязки
     :return:
     """
-    print("huj")
+    cerberus = Cerberus(
+        message=message,
+        user=False,
+        message_form=True,
+        forbidden_words=False
+    )
+    cerberus.tie_chats()
 
 
 @bot.message_handler(commands=["snap_chats"])
-def snap_chats():
+def snap_chats(message):
     """
     Заканчивает связывание чатов
     :return:
     """
-    print("huj")
+    cerberus = Cerberus(
+        message=message,
+        user=False,
+        message_form=True,
+        forbidden_words=False
+    )
+    cerberus.snap_chats()
 
 
 @bot.message_handler(commands=["autodelete_speed"])
-def autodelete_speed():
+def autodelete_speed(message):
     """
     Регулирует авто удаление технических сообщений от бота
     :return:
     """
-    print("huj")
-
-
-@bot.message_handler(commands=["tag"])
-def tag():
-    """
-    Добавляет отмеченного участка в список тех, кого бот будет
-    отмечать при подозрениях к участникам
-    :return:
-    """
-    print("huj")
-
-
-@bot.message_handler(commands=["do_not_tag"])
-def do_not_tag():
-    """
-    Удаляет отмеченного участка в список тех, кого бот будет
-    отмечать при подозрениях к участникам
-    :return:
-    """
-    print("huj")
+    cerberus = Cerberus(
+        message=message,
+        user=True,
+        message_form=True,
+        forbidden_words=False
+    )
+    cerberus.change_autodelete_time()
 
 
 @bot.message_handler(commands=["remember_admins"])
-def remember_admins():
+def admin_stat(message):
     """
     Вносит в базу данных всех участников чата как
     администраторов
     :return:
     """
-    print("huj")
+    cerberus = Cerberus(
+        message=message,
+        user=True,
+        message_form=True,
+        forbidden_words=False
+    )
+    cerberus.admin_stat()
+
+
+@bot.message_handler(commands=["remember_admins"])
+def delete_admin_stat(message):
+    """
+    Вносит в базу данных всех участников чата как
+    администраторов
+    :return:
+    """
+    cerberus = Cerberus(
+        message=message,
+        user=True,
+        message_form=True,
+        forbidden_words=False
+    )
+    cerberus.delete_admin_stat()
 
 
 @bot.message_handler(func=lambda message: True)

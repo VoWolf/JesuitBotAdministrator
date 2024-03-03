@@ -46,7 +46,11 @@ class TgUserRating(BaseModel):
         db_table = "TgUserRating"
     id = AutoField()
     spam_rating = FloatField()
+    spam_messages_in_count = IntegerField()
+    spam_messages_in_count_valid_until = DateTimeField()
     toxic_rating = FloatField()
+    toxic_messages_in_count = IntegerField()
+    toxic_messages_in_count_valid_until = DateTimeField()
 
 
 class Chats(BaseModel):
@@ -102,6 +106,13 @@ class TgUser(BaseModel):
     in_Chats_table = ForeignKeyField(Chats)
 
 
+class AutoDeleteTime(BaseModel):
+    class Meta:
+        db_table = "AutoDeleteTime"
+    id = AutoField()
+    autodelete_time = IntegerField()
+
+
 class BotsMessages(BaseModel):
     """
         id - номер записи (автоматическое поле, int)
@@ -116,6 +127,14 @@ class BotsMessages(BaseModel):
     time_until = DateTimeField()
 
 
+class Tokens(BaseModel):
+    class Meta:
+        db_table = "Tokens"
+    id = AutoField()
+    token_name = CharField(max_length=32)
+    token = CharField()
+
+
 def create_tables():
     """
         Создает таблицы
@@ -123,4 +142,4 @@ def create_tables():
     """
     db.connect()
     with db:
-        db.create_tables([ForbiddenWord, TgUserRating, Chats, TgUser, BotsMessages])
+        db.create_tables([ForbiddenWord, TgUserRating, Chats, TgUser, BotsMessages, AutoDeleteTime, Tokens])

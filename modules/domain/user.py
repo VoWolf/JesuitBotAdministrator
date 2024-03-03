@@ -126,8 +126,12 @@ class User:
         """
         if down_spam_rating:
             self.db_user.in_TgUserRating_table.spam_rating -= down_value
+            self.db_user.in_TgUserRating_table.spam_messages_in_count += 1
+            self.db_user.in_TgUserRating_table.spam_messages_in_count_valid_until = time.time() + 120
         if down_toxic_rating:
             self.db_user.in_TgUserRating_table.toxic_rating -= down_value
+            self.db_user.in_TgUserRating_table.toxic_messages_in_count += 1
+            self.db_user.in_TgUserRating_table.toxic_messages_in_count_valid_until = time.time() + 300
 
     def check_rating(self, rating_type):
         """
@@ -139,7 +143,7 @@ class User:
 
         3 - рейтинг выше -25 и ниже 0
 
-        4 - рейтинг ниже -25
+        4 - рейтинг ниже -25 и выше -50
 
         5 - рейтинг ниже -50
         :param rating_type:

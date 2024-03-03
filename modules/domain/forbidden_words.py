@@ -11,7 +11,7 @@ class ForbiddenWords:
         self.forbidden_words = [value.word for value in ForbiddenWord.select()]
 
     @staticmethod
-    def add_forbidden_words(word):
+    def add_forbidden_word(word):
         """
         Добавляет слово из позиционного аргумента word
         в таблицу ForbiddenWords
@@ -33,7 +33,7 @@ class ForbiddenWords:
         try:
             ForbiddenWord.delete_by_id(ForbiddenWord.get(word=word).id)
         except IndexError:
-            raise IndexError("Введено слово, которое отсутствует в базе данных")
+            raise KeyboardInterrupt("Введено слово, которое отсутствует в базе данных")
 
     def refresh_forbidden_words(self):
         """
