@@ -27,6 +27,14 @@ class Vote:
         """
         self.votes_against += 1
 
+    def vote_update(self, bot):
+        """
+        Обновляет сообщение с голосованием
+        :param bot:
+        :return:
+        """
+        pass
+
     def check_votes(self):
         """
         Проверяет не проголосовало ли за больше половины группы

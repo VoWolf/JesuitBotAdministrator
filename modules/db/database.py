@@ -70,6 +70,7 @@ class Chats(BaseModel):
     id = AutoField()
     admin_chat_id = IntegerField()
     main_chat_control_id = IntegerField()
+    token_for_tie = CharField(max_length=16)
 
 
 class TgUser(BaseModel):

@@ -17,7 +17,7 @@ def start(message):
     """
     cerberus = Cerberus(
         message=message,
-        user=False,
+        user=True,
         message_form=True,
         forbidden_words=False
     )
@@ -58,7 +58,7 @@ def add_forbidden_word(message):
     """
     cerberus = Cerberus(
         message=message,
-        user=False,
+        user=True,
         message_form=True,
         forbidden_words=True
     )
@@ -73,7 +73,7 @@ def delete_forbidden_word(message):
     """
     cerberus = Cerberus(
         message=message,
-        user=False,
+        user=True,
         message_form=True,
         forbidden_words=True
     )
@@ -140,7 +140,7 @@ def autodelete_speed(message):
     cerberus.change_autodelete_time()
 
 
-@bot.message_handler(commands=["remember_admins"])
+@bot.message_handler(commands=["admin_stat"])
 def admin_stat(message):
     """
     Вносит в базу данных всех участников чата как
@@ -156,7 +156,7 @@ def admin_stat(message):
     cerberus.admin_stat()
 
 
-@bot.message_handler(commands=["remember_admins"])
+@bot.message_handler(commands=["delete_admin_stat"])
 def delete_admin_stat(message):
     """
     Вносит в базу данных всех участников чата как
@@ -172,6 +172,28 @@ def delete_admin_stat(message):
     cerberus.delete_admin_stat()
 
 
+@bot.message_handler(commands=["kick"])
+def kick_user(message):
+    cerberus = Cerberus(
+        message=message,
+        user=True,
+        forbidden_words=False,
+        message_form=True
+    )
+    cerberus.kick_user()
+
+
+@bot.message_handler(commands=["ban"])
+def ban_user(message):
+    cerberus = Cerberus(
+        message=message,
+        user=True,
+        forbidden_words=False,
+        message_form=True
+    )
+    cerberus.ban_user()
+
+
 @bot.message_handler(func=lambda message: True)
 def message_handler(message):
     """
@@ -179,7 +201,12 @@ def message_handler(message):
     :param message:
     :return:
     """
-    cerberus = Cerberus(message)
+    cerberus = Cerberus(
+        message=message,
+        user=True,
+        message_form=True,
+        forbidden_words=True
+    )
     cerberus.handle_message()
 
 

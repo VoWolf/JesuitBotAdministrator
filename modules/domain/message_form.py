@@ -50,7 +50,8 @@ class MessageForm:
         :param text_values:
         :return:
         """
-        values = list(text_values.values())
+        values = tuple(map(str, list(text_values.values())))
+        print(sample, values)
         return {
             0: "{}, вы подозреваетесь в {}!\nВаш рейтинг: {}\nПожалуйста, будьте впредь поаккуратнее, удачи:)",
             1: "ГОЛОСОВАНИЕ!\nДобавить в чат пользователя {}?\nДополнительная информация:\nБудущая подпись "
@@ -74,10 +75,11 @@ class MessageForm:
             16: "К сожалению, произошла ошибка!\nКод ошибки: {}.",
             17: "{} назначен администратором!",
             18: "{} снят с должности администратора!",
-            19: "...",
+            19: "Данная команда должна быть использована ответом на сообщение!",
             20: "...",
             21: "Знакомьтесь, это {}!{}"
-        }[sample].format(values)
+        }[sample].format(*values)
+    # .format(values)
 
     def toxic_check_message(self):
         """
