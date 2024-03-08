@@ -38,6 +38,7 @@ class TgUser(BaseModel):
     warnings_count = IntegerField()
     warnings_valid_until = DateTimeField()
     is_muted_until = DateTimeField()
+    unmute_poll_id = IntegerField()
 
 
 class Poll(BaseModel):
