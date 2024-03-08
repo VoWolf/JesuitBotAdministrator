@@ -60,31 +60,32 @@ class User:
         :return:
         """
         try:
-            print(chat_id, user_id)
-            id_in_chats = Chats.get(main_chat_control_id=chat_id).id
+            id_in_chats = Chats.get(main_chat_control_id=chat_id)
         except IndexError:
+            modules.domain.cerberus.Cerberus.send(text="Для автоматической регистрации данного пользователя "
+                                                       "вам необходимо связать чаты! Инсрукция доступна по команде "
+                                                       "/tie_chats_instruction")
             return
-        TgUserRating.create(
+        new_id = TgUserRating.create(
             spam_rating=1.00,
             spam_messages_in_count=0,
             spam_messages_in_count_valid_until=0,
             toxic_rating=1.00,
             toxic_messages_in_count=0,
             toxic_messages_in_count_valid_until=0
-        ).save()
-        new_id = TgUserRating.get(spam_rating=1.00, spam_messages_in_count=0, toxic_rating=1.00)
+        ).id
+        new_record = TgUserRating.get_by_id(new_id)
         new_chat_member = modules.instances.bot_instance.bot.get_chat_member(
-            Chats.get(id=id_in_chats).main_chat_control_id, user_id
+            chat_id, user_id
         )
-        print(new_chat_member)
         TgUser.create(
             user_name=new_chat_member.user.username,
             user_nik=new_chat_member.user.first_name,
-            user_rang="Owner" if new_chat_member.custom_title is None else new_chat_member.custom_title,
-            is_admin=False,
+            user_rang="" if new_chat_member.custom_title is None else new_chat_member.custom_title,
+            is_admin=True if new_chat_member.custom_title is not None and "адм" in new_chat_member.custom_title else False,
             telegram_id=new_chat_member.user.id,
-            in_TgUserRating_table=new_id,
-            in_Chats_table=Chats.get(id=id_in_chats)
+            in_TgUserRating_table=new_record,
+            in_Chats_table=id_in_chats
         )
 
     def is_admin_or_no(self, bot):

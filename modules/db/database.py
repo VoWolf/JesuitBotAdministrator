@@ -117,7 +117,9 @@ class AutoDeleteTime(BaseModel):
 class BotsMessages(BaseModel):
     """
         id - номер записи (автоматическое поле, int)
+
         message_id - id сообщения бота (число, int)
+
         time_until - время до которого сообщение должно существовать в чате
         (время, datetime)
     """
@@ -128,14 +130,6 @@ class BotsMessages(BaseModel):
     time_until = DateTimeField()
 
 
-class Tokens(BaseModel):
-    class Meta:
-        db_table = "Tokens"
-    id = AutoField()
-    token_name = CharField(max_length=32)
-    token = CharField()
-
-
 def create_tables():
     """
         Создает таблицы
@@ -143,4 +137,4 @@ def create_tables():
     """
     db.connect()
     with db:
-        db.create_tables([ForbiddenWord, TgUserRating, Chats, TgUser, BotsMessages, AutoDeleteTime, Tokens])
+        db.create_tables([ForbiddenWord, TgUserRating, Chats, TgUser, BotsMessages, AutoDeleteTime])
