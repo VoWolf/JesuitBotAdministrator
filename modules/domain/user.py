@@ -42,24 +42,22 @@ class User:
         self.user_id: int = self.db_user.telegram_id
         self.chat_id = self.db_user.chats.main_chat_id
 
-    def make_user_admin(self, admin=True):
+    def make_user_admin(self, admin: bool = True) -> None:
         """
         Ставит пользователя на должность администратора
         или снимает его с этой должности
-        :param admin:
-        :return:
+        :param admin: назначить пользователя администратором?
         """
         self.db_user.is_admin = admin
         TgUser.save(self.db_user)
 
     @staticmethod
-    def add(user_id, chat_id):
+    def add(user_id: int, chat_id: int) -> None:
         """
         Создает новые записи в таблицах
         TgUser и TgUserRating
-        :param user_id:
-        :param chat_id:
-        :return:
+        :param user_id: ID пользователя
+        :param chat_id: ID чата
         """
         try:
             id_in_chats = Chats.get(main_chat_control_id=chat_id)
@@ -97,7 +95,13 @@ class User:
             in_Chats_table=id_in_chats,
         )
 
-    def is_admin_or_no(self, bot):
+    def is_admin_or_no(self, bot) -> bool:
+        """
+        Проверяет, является ли пользователь администратором.
+        В случае, если пользователь не админ, отправляется сообщение с соответствующим
+        оповещением
+        :param bot:
+        """
         if self.is_admin:
             return True
         bot.send_message(
@@ -119,16 +123,16 @@ class User:
 
     @admin_do_not_banned_guard
     def ban_user(
-            self, bot, duration=30, delete_messages_from_this_user=False, kick=False
-    ):
+            self, bot, duration: int = 30, delete_messages_from_this_user: bool = False, kick: bool = False
+    ) -> None:
         """
          Выгоняет данного пользователя из чата
          без возможности возврата (вносит в черный список чата) на определенное время
-        :param bot:
-        :param duration:
-        :param delete_messages_from_this_user:
-        :param kick:
-        :return:
+        :param bot: объект класса telebot
+        :param duration: длительность бана
+        :param delete_messages_from_this_user: удалить все сообщения от этого пользователя?
+        :param kick: Удалить поьзователя из черного листа сразу после занесения (дать ему возможность вернуться
+        сразу же)
         """
         bot.ban_chat_member(
             chat_id=self.chat_id,
@@ -141,24 +145,22 @@ class User:
                 chat_id=self.chat_id, user_id=self.user_id, only_if_banned=True
             )
 
-    def up_rating(self, up_value=0.01):
+    def up_rating(self, up_value: float = 0.01) -> None:
         """
         Повышает рейтинг заданного пользователя на
         введенное число
-        :param up_value:
-        :return:
+        :param up_value: число, на которое будет повышен рейтинг
         """
         self.db_user.ratings.toxic_rating += up_value
         self.db_user.ratings.spam_rating += up_value
 
-    def down_rating(self, down_value, down_toxic_rating=False, down_spam_rating=False):
+    def down_rating(self, down_value: float, down_toxic_rating: bool = False, down_spam_rating: bool = False) -> None:
         """
         Понижает выбранный рейтинг данного пользователя
         на введенное число
-        :param down_value:
-        :param down_toxic_rating:
-        :param down_spam_rating:
-        :return:
+        :param down_value: значение, на которое будет понижен рейтинг
+        :param down_toxic_rating: понизить рейтинг токсичности?
+        :param down_spam_rating: понизить спам рейтинг?
         """
         if down_spam_rating:
             self.db_user.ratings.spam_rating -= down_value
@@ -169,30 +171,5 @@ class User:
             self.db_user.ratings.toxic_messages_in_count += 1
             self.db_user.ratings.toxic_messages_in_count_valid_until = time.time() + 300
 
-    def check_rating(self, rating_type):
-        """
-        Проверяет рейтинг данного пользователя
-
-        1 - рейтинг выше 1.00
-
-        2 - рейтинг выше 0 и ниже 1.00
-
-        3 - рейтинг выше -25 и ниже 0
-
-        4 - рейтинг ниже -25 и выше -50
-
-        5 - рейтинг ниже -50
-        :param rating_type:
-        :return int:
-        """
-        if rating_type is None:
-            return
-        if self.db_user.ratings.rating_type >= 1.00:
-            return 1
-        if 0.00 <= self.db_user.ratings.rating_type < 1.00:
-            return 2
-        if -25 <= self.db_user.ratings.rating_type < 0.00:
-            return 3
-        if -50 <= self.db_user.ratings.rating_type < -25.00:
-            return 4
-        return 5
+    def check_rating(self) -> int:
+        pass

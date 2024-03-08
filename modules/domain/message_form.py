@@ -23,35 +23,31 @@ class MessageForm:
         self.forbidden_words = self.get_forbidden_words()
 
     @staticmethod
-    def change_autodelete_time(new_autodelete_time: int):
+    def change_autodelete_time(new_autodelete_time: int) -> None:
         """
         Изменяет время через которое сообщения бота будут удалены
         :param new_autodelete_time:
-        :return:
         """
         AutoDeleteTime.get_by_id(1).autodelete_time = new_autodelete_time
 
     @staticmethod
-    def get_forbidden_words():
+    def get_forbidden_words() -> list:
         """
         Подключается к таблице ForbiddenWord и
         получает список запрещенных слов
-        :return:
         """
         fws = ForbiddenWords()
         return fws.return_forbidden_words()
 
     @staticmethod
-    def return_ready_message_text(sample, **text_values):
+    def return_ready_message_text(sample: int, **text_values: str) -> str:
         """
          Возвращает готовое текстовое сообщение (подставляет данные именованные аргументы
          в выбранный номер шаблона)
-        :param sample:
-        :param text_values:
-        :return:
+        :param sample: номер шаблона, в который будут подставляться значения
+        :param text_values: значения, которые подставляются в шаблоны
         """
         values = tuple(map(str, list(text_values.values())))
-        print(sample, values)
         return {
             0: "{}, вы подозреваетесь в {}!\nВаш рейтинг: {}\nПожалуйста, будьте впредь поаккуратнее, удачи:)",
             1: "ГОЛОСОВАНИЕ!\nДобавить в чат пользователя {}?\nДополнительная информация:\nБудущая подпись "
@@ -79,35 +75,30 @@ class MessageForm:
             20: "...",
             21: "Знакомьтесь, это {}!{}"
         }[sample].format(*values)
-    # .format(values)
 
-    def toxic_check_message(self):
+    def toxic_check_message(self) -> bool:
         """
         Проверяет текст сообщений на наличие
         запрещенных слов
-        :return: True - если запрещенное слово обнаружено; False - если запрещенное слово не
-        обнаружено
         """
         for word in self.forbidden_words:
             if word in self.message_text:
                 return True
         return False
 
-    def spam_check_message(self):
+    def spam_check_message(self) -> bool:
         """
         Проверяет сообщение на наличие спама
-        :return:
         """
         # here is check
         if input():
             return False
         return True
 
-    def insert_message_in_bots_messages_table(self, time_until_exists):
+    def insert_message_in_bots_messages_table(self, time_until_exists: int) -> None:
         """
         Вносит текущее сообщение в таблицу BotsMessages
         :param time_until_exists:
-        :return:
         """
         BotsMessages.create(
             message_id=self.message_id,

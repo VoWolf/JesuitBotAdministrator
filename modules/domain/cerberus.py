@@ -106,13 +106,12 @@ class Cerberus:
         else:
             self.forbidden_word = None
 
-    def send(self, text, buttons=None, parse=False):
+    def send(self, text: str, buttons: list = None, parse: bool = False) -> None:
         """
         Отправляет новое сообщение
-        :param text:
-        :param buttons:
-        :param parse:
-        :return:
+        :param text: Текст сообщения
+        :param buttons: Список с кнопками, которые нужно добавить под сообщение
+        :param parse: Нужен ли parse_mode?
         """
         if buttons:
             bot.send_message(
@@ -123,61 +122,55 @@ class Cerberus:
         else:
             bot.send_message(self.chat_id, text)
 
-    def send_in_admin_chat(self, text):
+    def send_in_admin_chat(self, text: str) -> None:
         """
         Отправляет новое сообщение в чат с администрацией
-        :param text:
-        :return:
+        :param text: текст сообщения
         """
         bot.send_message(
             chat_id=Chats.get(main_chat_control_id=self.chat_id).admin_chat_id,
             text=text,
         )
 
-    def is_user_admin(self):
+    def is_user_admin(self) -> bool:
         """
         Проверяет, является ли пользователь администратором
-        :return: bool Пользователь администратор или нет
         """
         if not self.message_author.is_admin:
             self.reply("Ты не можешь этого сделать!)")
             return False
         return True
 
-    def is_reply_to_message_author_exists(self):
+    def is_reply_to_message_author_exists(self) -> bool:
         """
         Проверяет, использована ли команда ответом на сообщение
-        :return: bool Является ли сообщение реплаем
         """
         if not self.reply_to_message_author:
             self.reply("Эту команду надо использовать ответом на сообщение!")
             return False
         return True
 
-    def refresh_forbidden_words(self):
+    def refresh_forbidden_words(self) -> None:
         """Reloads forbidden words from database"""
         self.forbidden_word.refresh_forbidden_words()
 
-    def reply(self, text: str):
+    def reply(self, text: str) -> None:
         """
         Отвечает на сообщение
-        :param text:
-        :return:
+        :param text: текст сообщения
         """
         bot.reply_to(self.message, text)
 
-    def start(self):
+    def start(self) -> None:
         """
         Отправляет сообщение по команде
         /start
-        :return:
         """
         self.send(self.msg.return_ready_message_text(sample=8))
 
-    def my_rating(self):
+    def my_rating(self) -> None:
         """
         Высылает в чат текущий рейтинг пользователя
-        :return:
         """
         self.send(
             text=self.msg.return_ready_message_text(
@@ -213,11 +206,10 @@ class Cerberus:
         return args_list[: args_count + 1]
 
     @admin_guard
-    def extract_and_add_forbidden_word(self):
+    def extract_and_add_forbidden_word(self) -> None:
         """
         Извлекает из команды новое слово и
         добавляет его к списку запрещенных слов
-        :return:
         """
         word = self.extract_params(
             error_text="Не указано запрещенное слово! (формат ввода данной команды: /add_forbidden_word "
@@ -229,11 +221,10 @@ class Cerberus:
             self.forbidden_word.add_forbidden_word(word=word[0])
 
     @admin_guard
-    def extract_and_remove_forbidden_word(self):
+    def extract_and_remove_forbidden_word(self) -> None:
         """
         Извлекает из команды новое слово и
         удаляет его из списка запрещенных слов
-        :return:
         """
         word = self.extract_params(
             error_text="К сожалению, не указано запрещенное слово! (формат ввода данной команды: "
@@ -257,7 +248,7 @@ class Cerberus:
 
     @creator_guard
     @reply_user_guard
-    def extract_and_change_rating(self):
+    def extract_and_change_rating(self) -> None:
         """
          Меняет указанный рейтинг выбранного пользователя
          на указанное число
@@ -295,7 +286,7 @@ class Cerberus:
         )
 
     @creator_guard
-    def tie_chats(self):
+    def tie_chats(self) -> None:
         """
         Начинает связывание чатов
         :return: int token
@@ -309,7 +300,7 @@ class Cerberus:
         )
 
     @creator_guard
-    def snap_chats(self):
+    def snap_chats(self) -> None:
         """
         Завершает связывание чатов
         :return:
@@ -337,7 +328,7 @@ class Cerberus:
         self.send(text=self.msg.return_ready_message_text(sample=16, err_text=text))
 
     @admin_guard
-    def change_autodelete_time(self):
+    def change_autodelete_time(self) -> None:
         """
         Меняет скорость автоудаления сообщений бота
         :return:
@@ -363,7 +354,7 @@ class Cerberus:
     @creator_guard
     @redirect_regular_chat_member_to_vote
     @reply_user_guard
-    def admin_stat(self):
+    def admin_stat(self) -> None:
         """ "
         Назначает выбранного пользователя администратором
         """
@@ -377,7 +368,7 @@ class Cerberus:
     @creator_guard
     @redirect_regular_chat_member_to_vote
     @reply_user_guard
-    def delete_admin_stat(self):
+    def delete_admin_stat(self) -> None:
         """
         Снимает выбранного пользователя с должности администратора
         :return:
@@ -392,46 +383,7 @@ class Cerberus:
     @admin_guard
     @redirect_regular_chat_member_to_vote
     def kick_user(self, kick=False):
-        """
-        Банит пользователя на определенный срок
-        :return:
-        """
-        params = self.extract_params(
-            error_text="Вы указали недостаточное количество параметров! Пример использования команды: /kick "
-                       "[@username (если не ответом на сообщение)] [Срок (минимум - 30, сек)] [причина]",
-            args_count="end",
-        )
-        if params is None:
-            return
-
-        username = params[0] if "@" in params[0] else None
-        duration = params[1] if "@" in params[0] and not kick else params[0]
-        reason = params[2:] if duration == params[1] else params[1:]
-
-        if not kick:
-            try:
-                duration = int(duration)
-            except ValueError:
-                self.error(
-                    text="Длительность должна быть целым числом! Пример использования команды: /kick "
-                         "[@username (если не ответом на сообщение)] [Срок (минимум - 30, сек)] [причина]"
-                )
-                return
-
-        if not reason:
-            self.error(
-                text="Вы не указали причину для бана участника! /kick [@username (если не ответом на "
-                     "сообщение)] [Срок (минимум - 30, сек)] [причина]"
-            )
-            return
-
-        user_to_kick = User(
-            user_id=bot.get_chat_member(
-                chat_id=self.chat_id, user_id=username[1:]
-            ).user.id,
-            chat_id=self.chat_id,
-        )
-        user_to_kick.ban_user(bot=bot, duration=duration, kick=kick)
+        pass
 
     def reply_kick_user(self):
         pass
@@ -440,9 +392,8 @@ class Cerberus:
     def add(self):
         pass
 
-    def handle_message(self):
+    def handle_message(self) -> bool:
         """
         Проверяет сообщение на наличие токсичности
-        :return:
         """
         pass
