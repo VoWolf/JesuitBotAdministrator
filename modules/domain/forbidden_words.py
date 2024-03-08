@@ -7,28 +7,28 @@ class ForbiddenWords:
     """
     Отвечает за работу с таблицей ForbiddenWords
     """
+
     def __init__(self):
         self.forbidden_words = [value.word for value in ForbiddenWord.select()]
 
     @staticmethod
-    def add_forbidden_word(word):
+    def add_forbidden_word(word: str):
         """
         Добавляет слово из позиционного аргумента word
         в таблицу ForbiddenWords
-        :param word:
-        :return:
+        :param word: Текст слова, которое мы хотим добавить в запрещенные
+
+        :returns: None
         """
-        ForbiddenWord.create(
-            word=word
-        )
+        ForbiddenWord.create(word=word)
 
     @staticmethod
-    def delete_forbidden_word(word):
+    def delete_forbidden_word(word: str):
         """
         Удаляет слово из позиционного аргумента word
         из таблицы ForbiddenWords
-        :param word:
-        :return:
+        :param word: Текст слова, которое мы хотим удалить
+        :returns: None
         """
         try:
             ForbiddenWord.delete_by_id(ForbiddenWord.get(word=word).id)
@@ -38,13 +38,13 @@ class ForbiddenWords:
     def refresh_forbidden_words(self):
         """
         Обновляет значение forbidden_words
-        :return:
+        :returns: None
         """
         self.forbidden_words = [value.word for value in ForbiddenWord.select()]
 
     def return_forbidden_words(self):
         """
-        Возвращает список с запрещенными словами
-        :return list:
+        Возвращает список запрещенных слов
+        :returns list:
         """
         return self.forbidden_words

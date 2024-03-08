@@ -7,43 +7,48 @@ db = SqliteDatabase("bot_database.db")
 
 class BaseModel(Model):
     """Базовая модель"""
+
     class Meta:
         """Параметры базы данных"""
+
         database = db
 
 
 class ForbiddenWord(BaseModel):
     """
-        Отвечает за таблицу с запрещенными словами
+    Отвечает за таблицу с запрещенными словами
 
-        Колонки:
+    Свойства:
 
-        >> id - номер слова в таблице (автоматическое поле, int)
+    id (int)
+        ID запрещенного слова
 
-        >> word - само слово (текст, str)
+    word (str)
+        Слово
     """
-    class Meta:
-        db_table = "ForbiddenWord"
+
     id = AutoField()
     word = CharField()
 
 
 class TgUserRating(BaseModel):
     """
-        Отвечает за таблицу с рейтингами пользователя
+    Отвечает за таблицу с рейтингами пользователя
 
-        Колонки:
+    Свойства:
 
-        >> id - номер записи (автоматическое поле, int)
+    id (int)
+        Номер записи (автоматическое поле, int)
 
-        >> spam_rating - Рейтинг пользователя относительно спама,
+    spam_rating (float)
+        Рейтинг пользователя относительно спама,
         по умолчанию ставить 1.00 (число, float)
 
-        >> toxic_rating - Рейтинг пользователя относительно токсичности,
+    toxic_rating (float)
+        Рейтинг пользователя относительно токсичности,
         по умолчанию ставить 1.00 (число, float)
     """
-    class Meta:
-        db_table = "TgUserRating"
+
     id = AutoField()
     spam_rating = FloatField()
     spam_messages_in_count = IntegerField()
@@ -55,76 +60,85 @@ class TgUserRating(BaseModel):
 
 class Chats(BaseModel):
     """
-        Отвечает за таблицу со связками id чатов
+    Отвечает за таблицу со связками id чатов
 
-        Колонки:
+    Свойства:
 
-        >> id - номер записи (автоматическое поле, int)
+    id (int)
+        ID чата
 
-        >> admin_chat_id - id чата с администрацией (число, int)
+    admin_chat_id (int)
+        ID чата с администрацией
 
-        >> main_chat_control_id - id основного чата с участниками (число, int)
+    main_chat_id (int)
+        ID основного чата с участниками
     """
-    class Meta:
-        db_table = "Chats"
+
     id = AutoField()
     admin_chat_id = IntegerField()
-    main_chat_control_id = IntegerField()
+    main_chat_id = IntegerField()
     token_for_tie = CharField(max_length=16)
 
 
 class TgUser(BaseModel):
     """
-        Отвечает за таблицу для пользователя Telegram
+    Отвечает за таблицу для пользователя Telegram
 
-        Колонки:
+    Свойства:
 
-        >> id - номер пользователя (автоматическое поле, int)
+    id (int)
+        ID пользователя
 
-        >> telegram_id - id пользователя в Telegram (число, int)
+    telegram_id (int)
+        ID пользователя в Telegram
 
-        >> user_name - имя пользователя (текст, str)
+    user_name (str)
+        Имя пользователя
 
-        >> user_nik - ник пользователя (текст, str)
+    user_nik (str)
+        Ник пользователя
 
-        >> user_rang - звание пользователя (текст, str)
+    user_rang (str)
+        Звание пользователя
 
-        >> id_inTgUserRating - id записей о рейтинге данного пользователя в таблице
-        TgUserRating (число, int)
+    ratings (TgUserRating)
+        Список рейтингов пользователя
 
-        >> in_Chats_table_id - id записей о связке чатов данного пользователя в таблице
-        Chats (число, int)
+    chats (Chats)
+        Список чатов пользователя
     """
-    class Meta:
-        db_table = "TgUser"
+
     id = AutoField()
     user_name = CharField(max_length=32)
     user_nik = CharField(max_length=128)
     user_rang = CharField(max_length=16)
     is_admin = BooleanField()
     telegram_id = IntegerField()
-    in_TgUserRating_table = ForeignKeyField(TgUserRating)
-    in_Chats_table = ForeignKeyField(Chats)
+    ratings = ForeignKeyField(TgUserRating, backref="user")
+
+
+class UserChats(BaseModel):
+    user = ForeignKeyField(TgUser)
+    chat = ForeignKeyField(Chats)
 
 
 class AutoDeleteTime(BaseModel):
-    class Meta:
-        db_table = "AutoDeleteTime"
     id = AutoField()
     autodelete_time = IntegerField()
 
 
 class BotsMessages(BaseModel):
     """
-        id - номер записи (автоматическое поле, int)
+    id (int)
+        ID записи
 
-        message_id - id сообщения бота (число, int)
+    message_id (int)
+        ID сообщения
 
-        time_until - время до которого сообщение должно существовать в чате
-        (время, datetime)
+    time_until (timestamp)
+        Время до которого сообщение должно существовать в чате
     """
-    class Meta:
-        db_table = "BotsMessages"
+
     id = AutoField()
     message_id = IntegerField()
     time_until = DateTimeField()
@@ -137,4 +151,14 @@ def create_tables():
     """
     db.connect()
     with db:
-        db.create_tables([ForbiddenWord, TgUserRating, Chats, TgUser, BotsMessages, AutoDeleteTime])
+        db.create_tables(
+            [
+                ForbiddenWord,
+                TgUserRating,
+                Chats,
+                TgUser,
+                UserChats,
+                BotsMessages,
+                AutoDeleteTime,
+            ]
+        )

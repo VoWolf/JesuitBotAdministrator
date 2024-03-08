@@ -1,14 +1,14 @@
 """Объявляет класс бота (Cerberus)"""
 
-import time, string, random
+import random
+import string
 
+from modules.constants.users import OWNER
 from modules.db.database import Chats
-from modules.instances.bot_instance import bot
-
-from modules.domain.user import User
 from modules.domain.forbidden_words import ForbiddenWords
 from modules.domain.message_form import MessageForm
-from modules.domain.add_vote import Vote
+from modules.domain.user import User
+from modules.instances.bot_instance import bot
 
 
 def admin_guard(func):
@@ -62,14 +62,13 @@ def redirect_regular_chat_member_to_vote(func):
 
 def creator_guard(func):
     """
-    Декоратор для проверки использована ли
-    команда пользователем LastUwUlf
-    :param func:
-    :return:
+    Декоратор для проверки использована ли команда пользователем LastUwUlf
+    :param func: Функция-callback
+    :returns: callable
     """
 
     def inner(self):
-        if not self.message.from_user.username == "LastUwUlf":
+        if not self.message.from_user.username == OWNER:
             return
         func(self)
 
@@ -87,21 +86,18 @@ class Cerberus:
             if message.reply_to_message:
                 self.reply_to_message_author = User(
                     user_id=message.reply_to_message.from_user.id,
-                    chat_id=message.chat.id
+                    chat_id=message.chat.id,
                 )
 
             self.message_author = User(
-                user_id=message.from_user.id,
-                chat_id=message.chat.id
+                user_id=message.from_user.id, chat_id=message.chat.id
             )
         else:
             self.reply_to_message_author = None
             self.message_author = None
 
         if message_form:
-            self.msg = MessageForm(
-                message=self.message
-            )
+            self.msg = MessageForm(message=self.message)
         else:
             self.msg = None
 
@@ -119,7 +115,9 @@ class Cerberus:
         :return:
         """
         if buttons:
-            bot.send_message(self.chat_id, text, reply_markup=buttons, parse_mode="HTML")
+            bot.send_message(
+                self.chat_id, text, reply_markup=buttons, parse_mode="HTML"
+            )
         elif parse:
             bot.send_message(self.chat_id, text, parse_mode="HTML")
         else:
@@ -131,12 +129,15 @@ class Cerberus:
         :param text:
         :return:
         """
-        bot.send_message(chat_id=Chats.get(main_chat_control_id=self.chat_id).admin_chat_id, text=text)
+        bot.send_message(
+            chat_id=Chats.get(main_chat_control_id=self.chat_id).admin_chat_id,
+            text=text,
+        )
 
     def is_user_admin(self):
         """
         Проверяет, является ли пользователь администратором
-        :return: True если пользователь администратор, False если пользователь не администратор
+        :return: bool Пользователь администратор или нет
         """
         if not self.message_author.is_admin:
             self.reply("Ты не можешь этого сделать!)")
@@ -145,9 +146,8 @@ class Cerberus:
 
     def is_reply_to_message_author_exists(self):
         """
-        Проверяет, использована ли
-        команда ответом на сообщение
-        :return:
+        Проверяет, использована ли команда ответом на сообщение
+        :return: bool Является ли сообщение реплаем
         """
         if not self.reply_to_message_author:
             self.reply("Эту команду надо использовать ответом на сообщение!")
@@ -172,9 +172,7 @@ class Cerberus:
         /start
         :return:
         """
-        self.send(self.msg.return_ready_message_text(
-            sample=8
-        ))
+        self.send(self.msg.return_ready_message_text(sample=8))
 
     def my_rating(self):
         """
@@ -185,33 +183,34 @@ class Cerberus:
             text=self.msg.return_ready_message_text(
                 sample=9,
                 value_1=self.message_author.username,
-                value_2=self.message_author.db_user.in_TgUserRating_table.spam_rating,
-                value_3=self.message_author.db_user.in_TgUserRating_table.toxic_rating
+                value_2=self.message_author.db_user.ratings.spam_rating,
+                value_3=self.message_author.db_user.ratings.toxic_rating,
             )
         )
 
-    def extract_params(self, error_code: str, values_count):
+    def extract_params(
+            self, error_text: str, args_count: int | None = None
+    ) -> list | None:
         """
         Извлекает из текста сообщения нужные параметры для команд;
         В случае ошибки отправляет соответствующее сообщение
-        :param error_code:
-        :param values_count:
-        :return str:
+        :param error_text: Текст сообщения, которое будет отправлено при ошибке
+        :param args_count: Количество аргументов, которые мы хотим взять из строки.
+        Если не передаем, то вернутся все
         """
-        text = self.msg.message_text.split()
+        args_list = self.msg.message_text.split()[1:]
 
-        if values_count == "end":
-            return text[1:]
+        if args_count is None:
+            return args_list
 
-        if len(text) + 1 != values_count:
-            self.send(text=self.msg.return_ready_message_text(
-                sample=16,
-                value_1=error_code
-            ))
+        if len(args_list) < args_count:
+            self.send(
+                text=self.msg.return_ready_message_text(sample=16, value_1=error_text)
+            )
+
             return None
 
-        text = text[1:values_count + 1]
-        return text
+        return args_list[: args_count + 1]
 
     @admin_guard
     def extract_and_add_forbidden_word(self):
@@ -221,15 +220,13 @@ class Cerberus:
         :return:
         """
         word = self.extract_params(
-            error_code="Не указано запрещенное слово! (формат ввода данной команды: /add_forbidden_word "
+            error_text="Не указано запрещенное слово! (формат ввода данной команды: /add_forbidden_word "
                        "[слово, которое вы хотите добавить])",
-            values_count=1
+            args_count=1,
         )
 
         if word:
-            self.forbidden_word.add_forbidden_word(
-                word=word[0]
-            )
+            self.forbidden_word.add_forbidden_word(word=word[0])
 
     @admin_guard
     def extract_and_remove_forbidden_word(self):
@@ -239,24 +236,24 @@ class Cerberus:
         :return:
         """
         word = self.extract_params(
-            error_code="К сожалению, не указано запрещенное слово! (формат ввода данной команды: "
+            error_text="К сожалению, не указано запрещенное слово! (формат ввода данной команды: "
                        "/delete_forbidden_word [слово, которое вы хотите удалить])",
-            values_count=1
+            args_count=1,
         )
 
         if word is None:
             return
 
         try:
-            self.forbidden_word.delete_forbidden_word(
-                word=word
-            )
+            self.forbidden_word.delete_forbidden_word(word=word)
         except KeyboardInterrupt:
-            self.send(text=self.msg.return_ready_message_text(
-                sample=16,
-                value_1="К сожалению, введенного вами слово нет в базе данных! (формат ввода данной команды: "
-                        "/delete_forbidden_word [слово, которое вы хотите удалить])"
-            ))
+            self.send(
+                text=self.msg.return_ready_message_text(
+                    sample=16,
+                    value_1="К сожалению, введенного вами слово нет в базе данных! (формат ввода данной команды: "
+                            "/delete_forbidden_word [слово, которое вы хотите удалить])",
+                )
+            )
 
     @creator_guard
     @reply_user_guard
@@ -267,24 +264,24 @@ class Cerberus:
         :return:
         """
         rating_type, new_rating = self.extract_params(
-            error_code="К сожалению, не указаны все необходимые параметры! (Формат ввода данной команды:"
+            error_text="К сожалению, не указаны все необходимые параметры! (Формат ввода данной команды:"
                        "/rating_change [юзернейм] [тип рейтинга] [новый рейтинг])",
-            values_count=2
+            args_count=2,
         )
 
         if rating_type is None or new_rating is None:
             return
-# Поменять, а то значения не сохраняются
+        # Поменять, а то значения не сохраняются
         if rating_type.lower() == "спам":
-            self.reply_to_message_author.db_user.in_TgUserRating_table.spam_rating = new_rating
+            self.reply_to_message_author.db_user.ratings.spam_rating = new_rating
         elif rating_type.lower() == "токсик":
-            self.reply_to_message_author.db_user.in_TgUserRating_table.toxic_rating = new_rating
+            self.reply_to_message_author.db_user.ratings.toxic_rating = new_rating
         else:
             self.send(
                 self.msg.return_ready_message_text(
                     sample=16,
                     value_1="Указан несуществующий тип рейтинга!\nСпам - поменять спам рейтинг\nТоксик - поменять"
-                            " рейтинг токсичности"
+                            " рейтинг токсичности",
                 )
             )
             return
@@ -293,7 +290,7 @@ class Cerberus:
                 sample=12,
                 value_1=self.reply_to_message_author.user_name,
                 value_2=new_rating,
-                value_3=self.message_author.user_name
+                value_3=self.message_author.user_name,
             )
         )
 
@@ -305,16 +302,10 @@ class Cerberus:
         """
         tkn = "".join(random.choices(string.hexdigits, k=16))
         Chats.create(
-            main_chat_control_id=self.chat_id,
-            admin_chat_id=0,
-            token_for_tie=tkn
+            main_chat_control_id=self.chat_id, admin_chat_id=0, token_for_tie=tkn
         ).save()
         self.send(
-            self.msg.return_ready_message_text(
-                sample=14,
-                value_1=tkn,
-                value_2=tkn
-            )
+            self.msg.return_ready_message_text(sample=14, value_1=tkn, value_2=tkn)
         )
 
     @creator_guard
@@ -324,8 +315,7 @@ class Cerberus:
         :return:
         """
         tokn = self.extract_params(
-            error_code="Вы не указали токен для связывания!",
-            values_count=1
+            error_text="Вы не указали токен для связывания!", args_count=1
         )
         if tokn is None:
             return
@@ -335,26 +325,16 @@ class Cerberus:
         except IndexError:
             self.send(
                 self.msg.return_ready_message_text(
-                    sample=16,
-                    value_1="Вы указали несуществующий токен!"
+                    sample=16, value_1="Вы указали несуществующий токен!"
                 )
             )
             return
         chat.admin_chat_id = self.chat_id
         Chats.save(chat)
-        self.send(
-            self.msg.return_ready_message_text(
-                sample=15
-            )
-        )
+        self.send(self.msg.return_ready_message_text(sample=15))
 
     def error(self, text):
-        self.send(
-            text=self.msg.return_ready_message_text(
-                sample=16,
-                err_text=text
-            )
-        )
+        self.send(text=self.msg.return_ready_message_text(sample=16, err_text=text))
 
     @admin_guard
     def change_autodelete_time(self):
@@ -363,22 +343,20 @@ class Cerberus:
         :return:
         """
         new_time = self.extract_params(
-            values_count=1,
-            error_code="Ты не указал новое время автоудаления!",
+            args_count=1,
+            error_text="Ты не указал новое время автоудаления!",
         )
         try:
             new_time = int(new_time)
         except ValueError:
-            self.error(text="К сожалению, вы указали не тот тип данных! Пример использования команды: "
-                            "/change_autodelete_time [новое значение, число, сек]")
-        self.msg.change_autodelete_time(
-            new_time=new_time
-        )
+            self.error(
+                text="К сожалению, вы указали не тот тип данных! Пример использования команды: "
+                     "/change_autodelete_time [новое значение, число, сек]"
+            )
+        self.msg.change_autodelete_time(new_time=new_time)
         self.send(
             text=self.msg.return_ready_message_text(
-                sample=13,
-                value_1=new_time,
-                value_2=self.message_author
+                sample=13, value_1=new_time, value_2=self.message_author
             )
         )
 
@@ -386,14 +364,13 @@ class Cerberus:
     @redirect_regular_chat_member_to_vote
     @reply_user_guard
     def admin_stat(self):
-        """"
+        """ "
         Назначает выбранного пользователя администратором
         """
         self.reply_to_message_author.make_user_admin(admin=True)
         self.send(
             text=self.msg.return_ready_message_text(
-                sample=17,
-                value_1=self.reply_to_message_author.username
+                sample=17, value_1=self.reply_to_message_author.username
             )
         )
 
@@ -408,8 +385,7 @@ class Cerberus:
         self.reply_to_message_author.make_user_admin(admin=False)
         self.send(
             text=self.msg.return_ready_message_text(
-                sample=18,
-                value_1=self.reply_to_message_author.username
+                sample=18, value_1=self.reply_to_message_author.username
             )
         )
 
@@ -421,9 +397,9 @@ class Cerberus:
         :return:
         """
         params = self.extract_params(
-            error_code="Вы указали недостаточное количество параметров! Пример использования команды: /kick "
+            error_text="Вы указали недостаточное количество параметров! Пример использования команды: /kick "
                        "[@username (если не ответом на сообщение)] [Срок (минимум - 30, сек)] [причина]",
-            values_count="end"
+            args_count="end",
         )
         if params is None:
             return
@@ -436,24 +412,26 @@ class Cerberus:
             try:
                 duration = int(duration)
             except ValueError:
-                self.error(text="Длительность должна быть целым числом! Пример использования команды: /kick "
-                           "[@username (если не ответом на сообщение)] [Срок (минимум - 30, сек)] [причина]")
+                self.error(
+                    text="Длительность должна быть целым числом! Пример использования команды: /kick "
+                         "[@username (если не ответом на сообщение)] [Срок (минимум - 30, сек)] [причина]"
+                )
                 return
 
         if not reason:
-            self.error(text="Вы не указали причину для бана участника! /kick [@username (если не ответом на "
-                            "сообщение)] [Срок (минимум - 30, сек)] [причина]")
+            self.error(
+                text="Вы не указали причину для бана участника! /kick [@username (если не ответом на "
+                     "сообщение)] [Срок (минимум - 30, сек)] [причина]"
+            )
             return
 
         user_to_kick = User(
-            user_id=bot.get_chat_member(chat_id=self.chat_id, user_id=username[1:]).user.id,
-            chat_id=self.chat_id
+            user_id=bot.get_chat_member(
+                chat_id=self.chat_id, user_id=username[1:]
+            ).user.id,
+            chat_id=self.chat_id,
         )
-        user_to_kick.ban_user(
-            bot=bot,
-            duration=duration,
-            kick=kick
-        )
+        user_to_kick.ban_user(bot=bot, duration=duration, kick=kick)
 
     def reply_kick_user(self):
         pass
