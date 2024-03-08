@@ -43,3 +43,42 @@ class ForbiddenWords:
         Возвращает список запрещенных слов
         """
         return self.forbidden_words
+
+    def extract_and_add_forbidden_word(self) -> None:
+        """
+        Извлекает из команды новое слово и
+        добавляет его к списку запрещенных слов
+        """
+        word = self.extract_params(
+            error_text="Не указано запрещенное слово! (формат ввода данной команды: /add_forbidden_word "
+                       "[слово, которое вы хотите добавить])",
+            args_count=1,
+        )
+
+        if word:
+            self.forbidden_word.add_forbidden_word(word=word[0])
+
+    def extract_and_remove_forbidden_word(self) -> None:
+        """
+        Извлекает из команды новое слово и
+        удаляет его из списка запрещенных слов
+        """
+        word = self.extract_params(
+            error_text="К сожалению, не указано запрещенное слово! (формат ввода данной команды: "
+                       "/delete_forbidden_word [слово, которое вы хотите удалить])",
+            args_count=1,
+        )
+
+        if word is None:
+            return
+
+        try:
+            self.forbidden_word.delete_forbidden_word(word=word)
+        except KeyboardInterrupt:
+            self.send(
+                text=self.msg.return_ready_message_text(
+                    sample=16,
+                    value_1="К сожалению, введенного вами слово нет в базе данных! (формат ввода данной команды: "
+                            "/delete_forbidden_word [слово, которое вы хотите удалить])",
+                )
+            )

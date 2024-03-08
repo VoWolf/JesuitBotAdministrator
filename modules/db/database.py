@@ -58,6 +58,62 @@ class TgUserRating(BaseModel):
     toxic_messages_in_count_valid_until = DateTimeField()
 
 
+class ActiveRating(BaseModel):
+    """
+    Отвечает за таблицу с рейтингом активности
+
+    Свойства:
+
+    id (int)
+        Номер записи (автоматическое поле, int)
+
+    active_in_chat_rating (int)
+        Рейтинг активности в чате, количество очков, накопленных пользователем
+
+    active_in_chat_rating_lvl (int)
+        Уровень пользователя. 1 уровень = +1 дню ко времени, через которое пользователя автоматически
+        кикнет из чата
+
+    coefficient (int)
+        Коэффициент, на который умножается изменение двух средних арифметических 2-х остальных рейтингов.
+        Формула: a = ([разница между вчерашним и сегодняшним средним арифметическим спам рейтинга и рейтинга
+        токсичности]*[этот коэффициент]), где a - значение, которое прибавится к active_in_chat_rating
+
+    active_days_in_group (int)
+        Сколько дней участник провел в группе (считаются только те дни, когда участник отправил хотя бы 1 сообщение)
+    """
+    id = AutoField()
+    active_in_chat_rating = IntegerField()
+    active_in_chat_rating_lvl = IntegerField()
+    coefficient = IntegerField()
+    active_days_in_group = IntegerField()
+
+
+class UserStatistics(BaseModel):
+    """
+    Отвечает за таблицу с активностью пользователя
+
+    Свойства:
+
+    id (int)
+        Номер записи (автоматическое поле, int)
+
+    messages_per_day (int)
+        Количество сообщений, отправленных пользователем за промежуток времени от 00:00 до 23:59
+
+    messages_per_week (int)
+        Количество сообщений, отправленных пользователем за промежуток времени от 00:00 (понедельник) до 23:59
+        (воскресенье)
+
+    messages_per_all_time (int)
+        Количество сообщений, отправленных пользователем за все время
+    """
+    id = AutoField()
+    messages_per_day = IntegerField()
+    messages_per_week = IntegerField()
+    messages_per_all_time = IntegerField()
+
+
 class Chats(BaseModel):
     """
     Отвечает за таблицу со связками id чатов
@@ -115,6 +171,8 @@ class TgUser(BaseModel):
     is_admin = BooleanField()
     telegram_id = IntegerField()
     ratings = ForeignKeyField(TgUserRating, backref="user")
+    statistics = ForeignKeyField(UserStatistics, backref="user")
+    active_rating = ForeignKeyField(ActiveRating, backref="user")
 
 
 class UserChats(BaseModel):
@@ -160,5 +218,7 @@ def create_tables():
                 UserChats,
                 BotsMessages,
                 AutoDeleteTime,
+                ActiveRating,
+                UserStatistics
             ]
         )

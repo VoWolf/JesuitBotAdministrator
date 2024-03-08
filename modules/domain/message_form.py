@@ -104,3 +104,27 @@ class MessageForm:
             message_id=self.message_id,
             time_until=time.time() + time_until_exists
         )
+
+    def extract_params(
+            self, error_text: str, args_count: int | None = None
+    ) -> list | None:
+        """
+        Извлекает из текста сообщения нужные параметры для команд;
+        В случае ошибки отправляет соответствующее сообщение
+        :param error_text: Текст сообщения, которое будет отправлено при ошибке
+        :param args_count: Количество аргументов, которые мы хотим взять из строки.
+        Если не передаем, то вернутся все
+        """
+        args_list = self.msg.message_text.split()[1:]
+
+        if args_count is None:
+            return args_list
+
+        if len(args_list) < args_count:
+            self.send(
+                text=self.msg.return_ready_message_text(sample=16, value_1=error_text)
+            )
+
+            return None
+
+        return args_list[: args_count + 1]
