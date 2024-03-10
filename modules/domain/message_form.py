@@ -1,8 +1,7 @@
 """Объявляет класс MessageForm"""
 
 import time
-from modules.db.database import BotsMessages, AutoDeleteTime
-from modules.domain.forbidden_words import ForbiddenWords
+from modules.db.database import BotsMessages
 
 
 class MessageForm:
@@ -20,24 +19,7 @@ class MessageForm:
         self.message_id = message.id
         self.chat_id = message.chat.id
         self.message_text = message.text
-        self.forbidden_words = self.get_forbidden_words()
-
-    @staticmethod
-    def change_autodelete_time(new_autodelete_time: int) -> None:
-        """
-        Изменяет время через которое сообщения бота будут удалены
-        :param new_autodelete_time:
-        """
-        AutoDeleteTime.get_by_id(1).autodelete_time = new_autodelete_time
-
-    @staticmethod
-    def get_forbidden_words() -> list:
-        """
-        Подключается к таблице ForbiddenWord и
-        получает список запрещенных слов
-        """
-        fws = ForbiddenWords()
-        return fws.return_forbidden_words()
+        self.forbidden_words = None
 
     @staticmethod
     def return_ready_message_text(sample: int, **text_values: str) -> str:
@@ -95,7 +77,10 @@ class MessageForm:
             return False
         return True
 
-    def insert_message_in_bots_messages_table(self, time_until_exists: int) -> None:
+    def insert_message_in_bots_messages_table(
+            self,
+            time_until_exists: int
+    ) -> None:
         """
         Вносит текущее сообщение в таблицу BotsMessages
         :param time_until_exists:
@@ -106,25 +91,20 @@ class MessageForm:
         )
 
     def extract_params(
-            self, error_text: str, args_count: int | None = None
-    ) -> list | None:
+            self,
+            args_count: int | None = None
+    ) -> list | bool:
         """
-        Извлекает из текста сообщения нужные параметры для команд;
-        В случае ошибки отправляет соответствующее сообщение
-        :param error_text: Текст сообщения, которое будет отправлено при ошибке
+        Извлекает из текста сообщения нужные параметры для команд; В случае ошибки возвращает False
         :param args_count: Количество аргументов, которые мы хотим взять из строки.
         Если не передаем, то вернутся все
         """
-        args_list = self.msg.message_text.split()[1:]
+        args_list = self.message_text.split()[1:]
 
         if args_count is None:
             return args_list
 
         if len(args_list) < args_count:
-            self.send(
-                text=self.msg.return_ready_message_text(sample=16, value_1=error_text)
-            )
-
-            return None
+            return False
 
         return args_list[: args_count + 1]

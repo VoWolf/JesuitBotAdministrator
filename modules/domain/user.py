@@ -1,11 +1,11 @@
 """Создает объект User с данными о пользователе"""
 from time import time
+
 from modules.instances.bot_instance import bot
-from modules.domain.ratings_stuff import Ratings
 from modules.db.database import TgUser, TgUserRating, Chats, ActiveRating, UserStatistics
 
 
-class User(Ratings):
+class User:
     """
     Класс пользователя.
     Вся информация о данном пользователе
@@ -14,12 +14,7 @@ class User(Ratings):
         try:
             self.db_user = TgUser.get(telegram_id=user_id)
         except Exception:
-            self.db_user = self.add()
-
-        super().__init__(
-            ratings=self.db_user.ratings,
-            active_rating=self.db_user.active_rating
-        )
+            self.db_user = TgUser.get_by_id(self.add())
 
         self.username: str = self.db_user.user_name
         self.usernik: str = self.db_user.user_nik
