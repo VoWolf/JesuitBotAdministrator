@@ -1,19 +1,9 @@
 import telebot.types
 
 from modules.constants.users import OWNER
-from modules.db.database import BotsMessages, TgUser
+from modules.db.database import TgUser
 from modules.domain.user import User
 
-
-    # def __init__(
-    #         self,
-    #         user: User,
-    #         message: telebot.types.Message
-    # ) -> None:
-    #     self.user_admin = user.is_admin
-    #     self.user_owner = user.username in OWNER
-    #     self.messages_exists = [msg.message_id for msg in BotsMessages.select()]
-    #     self.reply = message.reply_to_message
 
 def creator_guard(message: telebot.types.Message) -> callable:
     """
@@ -54,7 +44,7 @@ def admin_guard(message) -> callable:
     return decorator
 
 
-def reply_guard(self) -> callable:
+def reply_guard(message: telebot.types.Message) -> callable:
     """
     Декоратор для проверки реплая (использован ли сообщение ответом): при True вызывает функцию, при False
     отправляет соответствующее сообщение
@@ -62,7 +52,7 @@ def reply_guard(self) -> callable:
 
     def decorator(func: callable):
         def inner(*args, **kwargs):
-            if not self.reply:
+            if not message.reply_to_message:
                 return
             func(*args, **kwargs)
 
@@ -72,7 +62,6 @@ def reply_guard(self) -> callable:
 
 
 def redirect_non_creators_to_vote(
-        self,
         vote_text: str,
         admins_available: bool = True,
 ) -> callable:
@@ -85,31 +74,14 @@ def redirect_non_creators_to_vote(
     pass
 
 
-def message_exists_guard(self, message_id: int) -> callable:
-    """
-    Проверяет, существует ли сообщение с указанным ID
-    :param message_id:
-    """
-
-    def decorator(func: callable):
-        def inner(*args, **kwargs):
-            if message_id not in self.messages_exists:
-                return
-            func(*args, **kwargs)
-
-        return inner
-
-    return decorator
-
-
-def admins_do_not_banned(self) -> callable:
+def admins_do_not_banned(user: User) -> callable:
     """
     Проверяет, является ли пользователь администратором. При False выполняет функцию
     """
 
     def decorator(func: callable):
         def inner(*args, **kwargs):
-            if self.user_admin:
+            if user.is_admin:
                 return
             func(*args, **kwargs)
 

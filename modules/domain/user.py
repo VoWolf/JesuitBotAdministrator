@@ -1,8 +1,10 @@
 """Создает объект User с данными о пользователе"""
 from time import time
 
+import telebot.types
+
 from modules.instances.bot_instance import bot
-from modules.db.database import TgUser, TgUserRating, Chats, ActiveRating, UserStatistics
+from modules.db.database import *
 
 
 class User:
@@ -10,70 +12,69 @@ class User:
     Класс пользователя.
     Вся информация о данном пользователе
     """
-    def __init__(self, user_id: int) -> None:
+
+    def __init__(self, message: telebot.types.Message) -> None:
         try:
-            self.db_user = TgUser.get(telegram_id=user_id)
+            self.db_user: TgUser = TgUser.get(telegram_id=message.from_user.id)
         except Exception:
-            self.db_user = TgUser.get_by_id(self.add())
+            self.db_user: TgUser = TgUser.get_by_id(self.add())
+
+        self.message: telebot.types.Message = message
 
         self.username: str = self.db_user.user_name
         self.usernik: str = self.db_user.user_nik
         self.userrang: str = self.db_user.user_rang
-        self.is_admin = self.db_user.is_admin
+        self.is_admin: bool = self.db_user.is_admin
         self.user_id: int = self.db_user.telegram_id
-        self.chat_id = self.db_user.chats.main_chat_id
+        self.chat_id: int = self.db_user.chats.main_chat_id
 
-    def add(self) -> None | TgUser:
+    def add_user(self) -> TgUser | None:
+        user = TgUser.create(
+            user_name=self.message.from_user.username,
+            user_nik=self.message.from_user.full_name
+            user_rang="das",
+            is_admin="self.message.from_user."
+        )
+
+    @staticmethod
+    def add_stata_and_ratings() -> tuple | None:
+        tables = (
+            ActiveRating.create(
+                active_in_chat_rating=0,
+                active_in_chat_rating_lvl=1,
+                coefficient=1,
+                active_days_in_group=1
+            ).id,
+            UserStatistics.create(
+                messages_per_day=1,
+                messages_per_week=1,
+                messages_per_all_time=1
+            ).id,
+            TgUserRating.create(
+                main_rating=1.00,
+                yesterday_rating=0.00
+            ).id,
+        )
+        return tables
+
+    def add_chat(self) -> Chat:
         """
-        Создает новые записи в таблицах
-        TgUser и TgUserRating
+        Добавляет запись в таблицу Chat или
+        :return:
         """
         try:
-            in_chats = Chats.get(main_chat_control_id=self.chat_id)
-        except IndexError:
-            return
+            chat = Chat.get(chat_id=self.chat_id)
+        except Exception:
+            auto = AutoDeleteTime.create(
+                autodelete_time=15
+            ).id
+            chat = Chat.create(
+                chat_id=self.chat_id,
+                chat_type=self.message.chat.type,
+                autodelete_speed=AutoDeleteTime.get(auto)
+            )
 
-        in_ratings_table = TgUserRating.create(
-            spam_rating=1.00,
-            spam_messages_in_count=0,
-            spam_messages_in_count_valid_until=0,
-            toxic_rating=1.00,
-            toxic_messages_in_count=0,
-            toxic_messages_in_count_valid_until=0,
-        ).id
-
-        in_active_rating_table = ActiveRating.create(
-            active_in_chat_rating=0,
-            active_in_chat_rating_lvl=1,
-            coefficient=1,
-            active_days_in_group=1
-        ).id
-
-        in_statistics_table = UserStatistics.create(
-            messages_per_day=1,
-            messages_per_week=1,
-            messages_per_all_time=1
-        ).id
-
-        new_chat_member = bot.get_chat_member(
-            self.chat_id, self.user_id
-        )
-        return TgUser.create(
-            user_name=new_chat_member.user.username,
-            user_nik=new_chat_member.user.first_name,
-            user_rang=""
-            if new_chat_member.custom_title is None
-            else new_chat_member.custom_title,
-            is_admin=True
-            if new_chat_member.custom_title is not None
-               and "адм" in new_chat_member.custom_title
-            else False,
-            telegram_id=new_chat_member.user.id,
-            in_TgUserRating_table=TgUserRating.get_by_id(in_ratings_table),
-            in_Chats_table=in_chats,
-            statistics=UserStatistics.get_by_id(in_statistics_table),
-            active_rating=ActiveRating.get_by_id(in_active_rating_table)
-        ).id
+        return chat
 
     def change_user_admin_stat(self, admin: bool = True) -> None:
         """
