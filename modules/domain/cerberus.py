@@ -1,17 +1,15 @@
-"""Объявляет класс бота (Cerberus)"""
+"""Объявляет класс бота (CERBERUS)"""
 import telebot.types
 
-from modules.instances.bot_instance import bot
-from modules.domain.message_form import MessageForm
+from modules.instances.bot_instance import BOT
 
 
-class Cerberus:
+class CERBERUS:
     """Класс бота"""
 
     def __init__(self, message):
         self.message: telebot.types.Message = message
         self.chat_id: int = message.chat.id
-        self.msg: MessageForm = MessageForm(message=message)
 
     def send(
             self,
@@ -29,7 +27,7 @@ class Cerberus:
         :param protect: Защитить сообщение от копирования и пересылки
         :param silence: Отправить сообщение без звука
         """
-        bot.send_message(
+        BOT.send_message(
             chat_id=self.chat_id,
             text=text,
             parse_mode=parse,
@@ -46,7 +44,7 @@ class Cerberus:
         Отвечает на сообщение
         :param text: текст сообщения
         """
-        bot.reply_to(self.message, text=text)
+        BOT.reply_to(self.message, text=text)
 
     def chat_member(
         self,
@@ -57,21 +55,14 @@ class Cerberus:
         :param username_or_userid: Имя пользователя или ID участника группы
         """
         try:
-            chat_member = bot.get_chat_member(chat_id=self.chat_id, user_id=username_or_userid)
-        except Exception as e:
-            self.error(text=f"Указан несуществующий юзернейм или ID пользователя! Ошибка: {e}")
+            chat_member = BOT.get_chat_member(chat_id=self.chat_id, user_id=username_or_userid)
+        except Exception:
+            self.error()  # add Error
             return
         return chat_member
 
-    def error(
-            self,
-            text: str
-    ) -> None:
-        """
-        Отправляет в чат сообщение об ошибке
-        :param text: текст ошибки
-        """
-        self.send(text=self.msg.return_ready_message_text(sample="error", err_text=text))
+    def error(self):
+        pass
 
     def change_autodelete_time(self) -> None:
         pass

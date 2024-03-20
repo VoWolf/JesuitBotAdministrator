@@ -1,4 +1,4 @@
-"""В данном файле создаются таблицы в базе данных бота"""
+"""Таблицы в базе данных бота"""
 from peewee import *
 
 db = SqliteDatabase("bot_database.db")
@@ -13,161 +13,145 @@ class BaseModel(Model):
         database = db
 
 
-class TgUserRating(BaseModel):
+class TgUser(BaseModel):
     """
-    Отвечает за таблицу с рейтингами пользователя
-
-    Свойства:
+    Информация о пользователе
 
     id (int)
-        Номер записи (автоматическое поле, int)
+        ID записи
+    telegram_id (int)
+        ID пользователя в Telegram
+    user_nik (str)
+        Имя пользователя внутри бота
+    user_name (str)
+        Имя пользователя в Telegram образца @ExampleUser
+    is_administrator_in_bot (bool)
+        Является ли пользователь администратором внутри бота (НЕ ЧАТА!!!)
 
-    main_rating (float)
-        Сегодняшний рейтинг пользователя, изменяется с каждым отправленным сообщением,
-        по умолчанию ставить 1.00 (число, float)
+    Ссылки на другие таблицы:
+        "statistics" - статистика данного пользователя
 
-    yesterday_rating (float)
-        Вчерашний рейтинг пользователя, используется для подсчета изменений рейтинга
-        по умолчанию ставить 0.00 (число, float)
+        "chats" - чаты, в которых состоит пользователь
     """
     id = AutoField()
-    main_rating = IntegerField()
-    yesterday_rating = IntegerField()
-
-
-class ActiveRating(BaseModel):
-    """
-    Отвечает за таблицу с рейтингом активности
-
-    Свойства:
-
-    id (int)
-        Номер записи (автоматическое поле, int)
-
-    active_in_chat_rating (int)
-        Рейтинг активности в чате, количество очков, накопленных пользователем
-
-    active_in_chat_rating_lvl (int)
-        Уровень пользователя. 1 уровень = +1 дню ко времени, через которое пользователя автоматически
-        кикнет из чата
-
-    coefficient (int)
-        Коэффициент, на который умножается изменение двух средних арифметических 2-х остальных рейтингов.
-        Формула: a = ([разница между вчерашним и сегодняшним средним арифметическим спам рейтинга и рейтинга
-        токсичности]*[этот коэффициент]), где a - значение, которое прибавится к active_in_chat_rating
-
-    active_days_in_group (int)
-        Сколько дней участник провел в группе (считаются только те дни, когда участник отправил хотя бы 1 сообщение)
-    """
-    id = AutoField()
-    active_in_chat_rating = IntegerField()
-    active_in_chat_rating_lvl = IntegerField()
-    coefficient = IntegerField()
-    active_days_in_group = IntegerField()
+    telegram_id = IntegerField()
+    user_nik = CharField(max_length=128)
+    user_name = CharField(max_length=32)
+    is_administrator_in_bot = BooleanField()
 
 
 class UserStatistics(BaseModel):
     """
-    Отвечает за таблицу с активностью пользователя
-
-    Свойства:
+    Активность пользователя
 
     id (int)
         Номер записи (автоматическое поле, int)
-
     messages_per_day (int)
         Количество сообщений, отправленных пользователем за промежуток времени от 00:00 до 23:59
-
     messages_per_week (int)
         Количество сообщений, отправленных пользователем за промежуток времени от 00:00 (понедельник) до 23:59
         (воскресенье)
-
     messages_per_all_time (int)
         Количество сообщений, отправленных пользователем за все время
+    user (ForeignKey)
+        Ссылка на запись о пользователе, к которому относится статистика
     """
     id = AutoField()
     messages_per_day = IntegerField()
     messages_per_week = IntegerField()
     messages_per_all_time = IntegerField()
-
-
-class AutoDeleteTime(BaseModel):
-    id = AutoField()
-    autodelete_time = IntegerField()
+    user = ForeignKeyField(TgUser, backref="statistics")
 
 
 class Chat(BaseModel):
     """
-    pass
+    Информация о чатах
+
+    id (int)
+        ID записи
+    chat_id (int)
+        ID чата
+    chat_type (str)
+        Тип чата (Бывают: private - приватный или supergroup - супергруппа. Также бывают и другие,
+        но здесь они не обрабатываются)
+
+    Ссылки на другие таблицы:
+        "users" - пользователи, которые состоят в чате
+
+        "autodelete_time" - время автоматического удаления сообщений в данном чате
+
+        "bot_messages" - сообщения бота в этом чате
+
+        "stop_words" - стоп-слова (запрещенные слова) в данном чате
     """
     id = AutoField()
     chat_id = IntegerField()
     chat_type = CharField()
-    autodelete_speed = ForeignKeyField(AutoDeleteTime, backref="chat")
-
-
-class TgUser(BaseModel):
-    """
-    Отвечает за таблицу для пользователя Telegram
-
-    Свойства:
-
-    id (int)
-        ID пользователя
-
-    telegram_id (int)
-        ID пользователя в Telegram
-
-    user_name (str)
-        Имя пользователя
-
-    user_nik (str)
-        Ник пользователя
-
-    user_rang (str)
-        Звание пользователя
-
-    ratings (TgUserRating)
-        Список рейтингов пользователя
-
-    chats (Chats)
-        Список чатов пользователя
-    """
-
-    id = AutoField()
-    user_name = CharField(max_length=32)
-    user_nik = CharField(max_length=128)
-    user_rang = CharField(max_length=16)
-    is_admin = BooleanField()
-    telegram_id = IntegerField()
-    ratings = ForeignKeyField(TgUserRating, backref="user")
-    statistics = ForeignKeyField(UserStatistics, backref="user")
-    active_rating = ForeignKeyField(ActiveRating, backref="user")
 
 
 class UserChat(BaseModel):
     """
-    pass
+    Обеспечение связи 'многие ко многим' между таблицами TgUser и Chat
+
+    id (int)
+        ID записи
+    user (ForeignKey)
+        Ссылка на таблицу с пользователем
+    chat (ForeignKey)
+        Ссылка на таблицу с чатом, в котором состоит пользователь
     """
     id = AutoField()
     user = ForeignKeyField(TgUser, backref="chats")
     chat = ForeignKeyField(Chat, backref="users")
 
 
+class AutoDeleteTime(BaseModel):
+    """
+    Хранит время, через которое бот автоматически будет удалять свои сообщения
+
+    autodelete_time (int)
+        Время автоудаления (секунды)
+    chat (ForeignKey)
+        Ссылка на чат, в нем действует заданное время
+    """
+    id = AutoField()
+    autodelete_time = IntegerField()
+    chat = ForeignKeyField(Chat, backref="autodelete_time")
+
+
 class BotsMessages(BaseModel):
     """
+    Сохраняет все сообщения, отправленные ботом
+
     id (int)
         ID записи
-
     message_id (int)
         ID сообщения
-
     time_until (timestamp)
         Время до которого сообщение должно существовать в чате
+    chat (ForeignKey)
+        Ссылка на чат, в котором это сообщение было отправлено
     """
     id = AutoField()
     message_id = IntegerField()
-    time_until = DateTimeField()
+    valid_until = DateTimeField()
+    chat = ForeignKeyField(Chat, backref="bot_messages")
+
+
+class StopWords(BaseModel):
+    """
+    Запрещенные слова в чате (бот будет автоматически их чистить)
+
+    id (int)
+        ID записи
+    word (str)
+        Само слово
+    chat (ForeignKey)
+        Ссылка на чат, в котором действует данное стоп-слово
+    """
+    id = IntegerField()
+    word = CharField(max_length=64)
+    chat = ForeignKeyField(Chat, backref="stop_words")
 
 
 def create_tables():
@@ -179,13 +163,12 @@ def create_tables():
     with db:
         db.create_tables(
             [
-                TgUserRating,
-                ActiveRating,
+                TgUser,
                 UserStatistics,
                 Chat,
-                TgUser,
                 UserChat,
                 AutoDeleteTime,
-                BotsMessages
+                BotsMessages,
+                StopWords
             ]
         )
