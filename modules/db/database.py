@@ -32,6 +32,10 @@ class TgUser(BaseModel):
         "statistics" - статистика данного пользователя
 
         "chats" - чаты, в которых состоит пользователь
+
+        "inactive" - количество идущих подряд дней когда кол-во сообщений за день было равно 0
+
+        "free_days" - Дни, в которые пользователь может гулять (Отмечаются лс)
     """
     id = AutoField()
     telegram_id = IntegerField()
@@ -44,8 +48,6 @@ class UserStatistics(BaseModel):
     """
     Активность пользователя
 
-    id (int)
-        Номер записи (автоматическое поле, int)
     messages_per_day (int)
         Количество сообщений, отправленных пользователем за промежуток времени от 00:00 до 23:59
     messages_per_week (int)
@@ -56,11 +58,33 @@ class UserStatistics(BaseModel):
     user (ForeignKey)
         Ссылка на запись о пользователе, к которому относится статистика
     """
-    id = AutoField()
     messages_per_day = IntegerField()
     messages_per_week = IntegerField()
     messages_per_all_time = IntegerField()
     user = ForeignKeyField(TgUser, backref="statistics")
+
+
+class InactiveDays(BaseModel):
+    """
+    New**
+    """
+    warned_to_go: BooleanField()
+    inactive_days_counter = IntegerField()
+    user = ForeignKeyField(TgUser, backref="inactive")
+
+
+class FreeWeekDays(BaseModel):
+    """
+    New**
+    """
+    monday = BooleanField()
+    tuesday = BooleanField()
+    wednesday = BooleanField()
+    Thursday = BooleanField()
+    Friday = BooleanField()
+    Saturday = BooleanField()
+    Sunday = BooleanField()
+    user = ForeignKeyField(TgUser, backref="free_days")
 
 
 class Chat(BaseModel):
@@ -83,6 +107,8 @@ class Chat(BaseModel):
         "bot_messages" - сообщения бота в этом чате
 
         "stop_words" - стоп-слова (запрещенные слова) в данном чате
+
+        "rules" - Правила чата
     """
     id = AutoField()
     chat_id = IntegerField()
@@ -93,14 +119,11 @@ class UserChat(BaseModel):
     """
     Обеспечение связи 'многие ко многим' между таблицами TgUser и Chat
 
-    id (int)
-        ID записи
     user (ForeignKey)
         Ссылка на таблицу с пользователем
     chat (ForeignKey)
         Ссылка на таблицу с чатом, в котором состоит пользователь
     """
-    id = AutoField()
     user = ForeignKeyField(TgUser, backref="chats")
     chat = ForeignKeyField(Chat, backref="users")
 
@@ -114,7 +137,6 @@ class AutoDeleteTime(BaseModel):
     chat (ForeignKey)
         Ссылка на чат, в нем действует заданное время
     """
-    id = AutoField()
     autodelete_time = IntegerField()
     chat = ForeignKeyField(Chat, backref="autodelete_time")
 
@@ -123,8 +145,6 @@ class BotsMessages(BaseModel):
     """
     Сохраняет все сообщения, отправленные ботом
 
-    id (int)
-        ID записи
     message_id (int)
         ID сообщения
     time_until (timestamp)
@@ -132,7 +152,6 @@ class BotsMessages(BaseModel):
     chat (ForeignKey)
         Ссылка на чат, в котором это сообщение было отправлено
     """
-    id = AutoField()
     message_id = IntegerField()
     valid_until = DateTimeField()
     chat = ForeignKeyField(Chat, backref="bot_messages")
@@ -142,16 +161,39 @@ class StopWords(BaseModel):
     """
     Запрещенные слова в чате (бот будет автоматически их чистить)
 
-    id (int)
-        ID записи
     word (str)
         Само слово
     chat (ForeignKey)
         Ссылка на чат, в котором действует данное стоп-слово
     """
-    id = IntegerField()
     word = CharField(max_length=64)
     chat = ForeignKeyField(Chat, backref="stop_words")
+
+
+class Rules(BaseModel):
+    rule = CharField(max_length=4096)
+    chat = ForeignKeyField(Chat, backref="rules")
+
+
+class Place(BaseModel):
+    city = CharField(max_length=16)
+    metro_thread = CharField(max_length=16)
+    metro_station = CharField(max_length=16)
+    location = CharField(max_length=32)
+
+
+class Walks(BaseModel):
+    name = CharField(max_length=32)
+    place = ForeignKeyField(Place, backref="walk")
+    time_start = DateTimeField()
+    time_end = DateTimeField()
+    how_many_people = IntegerField()
+    chat = ForeignKeyField(Chat, backref="walks")
+
+
+class UserWalks(BaseModel):
+    walk = ForeignKeyField(Walks, backref="users")
+    user = ForeignKeyField(TgUser, backref="walks")
 
 
 def create_tables():

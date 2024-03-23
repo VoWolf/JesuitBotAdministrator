@@ -1,50 +1,59 @@
 """Главный файл"""
-import telebot
-
+from modules.domain.cerberus import Cerberus
 from modules.instances.bot_instance import BOT
+from modules.db.database import create_tables
+# from modules.domain.decorators import
+
+
+create_tables()
 
 
 @BOT.message_handler(commands=["start"])
 def start(message):
-    pass
+    cerberus = Cerberus(message)
+    cerberus.send(text="Привет! Я - бот администратор, помогу разобраться с чатом")
 
 
-@BOT.message_handler(commands=["me", "my_stata"], regexp="Церберус, кто я")
+@BOT.message_handler(regexp="Церберус, кто я")
 def user_statistics(message):
     pass
 
 
-@BOT.message_handler(commands=["my_free_days"], regexp="Церберус, мои свободные дни")
+@BOT.message_handler(regexp="Церберус, мои свободные дни")
 def free_days(message):
     pass
 
 
-@BOT.message_handler(commands=["add_member"], regexp="Церберус, добавить @")
-def add_member(message):
+def add_member(message, data):
     pass
 
 
-@BOT.message_handler(commands=["BAN"], regexp=["Церберус, забань @", "Церберус, прогони @"])
-def ban_member(message):
+@BOT.message_handler(regexp=["Церберус, прогони @"])
+def ban_member(message, data):
     pass
 
 
-@BOT.message_handler(commands=["add_stop_word"], regexp="Церберус, добавить стоп-слово")
-def add_stop_word(message):
+@BOT.message_handler(regexp="Церберус, добавь стоп-слово")
+def add_stop_word(message, data):
     pass
 
 
-@BOT.message_handler(commands=["del_stop_word"], regexp="Церберус, удалить стоп-слово")
-def del_stop_word(message):
+@BOT.message_handler(regexp="Церберус, удали стоп-слово")
+def del_stop_word(message, data):
     pass
 
 
-@BOT.message_handler(commands=["planned_walks"], regexp="Церберус, прогулки")
+@BOT.message_handler(regexp="Церберус, прогулки")
 def planned_walks(message):
     pass
 
 
-@BOT.message_handler(commands=["add_walk"], regexp="Церберус, добавь прогулку")
+@BOT.message_handler(regexp="Церберус, добавь прогулку")
+def add_walk(message):
+    pass
+
+
+@BOT.message_handler(startwith="Церберус")
 def add_walk(message):
     pass
 

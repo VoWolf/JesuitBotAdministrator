@@ -4,10 +4,10 @@ import telebot.types
 from modules.instances.bot_instance import BOT
 
 
-class CERBERUS:
+class Cerberus:
     """Класс бота"""
 
-    def __init__(self, message):
+    def __init__(self, message: telebot.types.Message):
         self.message: telebot.types.Message = message
         self.chat_id: int = message.chat.id
 
@@ -15,7 +15,7 @@ class CERBERUS:
             self,
             text: str,
             parse: str | None = None,
-            buttons: list | None = None,
+            buttons: telebot.types.InlineKeyboardMarkup | telebot.types.ReplyKeyboardMarkup | None = None,
             protect: bool = False,
             silence: bool = False
     ) -> None:
@@ -45,6 +45,32 @@ class CERBERUS:
         :param text: текст сообщения
         """
         BOT.reply_to(self.message, text=text)
+
+    def count_chat_members(self) -> int:
+        return BOT.get_chat_member_count(chat_id=self.chat_id)
+
+    def edit(
+            self,
+            message_id: int,
+            new_text: str,
+            parse: str | None = None,
+            buttons: telebot.types.ReplyKeyboardMarkup | telebot.types.InlineKeyboardMarkup | None = None
+    ) -> None:
+        """
+        Изменяет сообщение с введенным message_id
+        :param message_id: ID сообщения
+        :param new_text: ID чата
+        :param parse: Нужно ли форматировать текст?
+        :param buttons: Кнопки под сообщением
+        :return:
+        """
+        BOT.edit_message_text(
+            text=new_text,
+            chat_id=self.chat_id,
+            message_id=message_id,
+            parse_mode=parse,
+            reply_markup=buttons,
+        )
 
     def chat_member(
         self,

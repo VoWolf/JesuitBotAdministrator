@@ -1,9 +1,8 @@
-from typing import Union
-
 import telebot.types
 
-from modules.constants.users import OWNER
 from modules.db.database import *
+from modules.domain.UserChat.Chat import ChatInfo
+from modules.domain.UserChat.user import User
 
 
 class GetData:
@@ -18,7 +17,7 @@ class GetData:
         self.chat_id: int = self.chat.id
         self.chat_type: str = self.chat.type
 
-    def get_chat(self) -> Chat:
+    def get_db_chat(self) -> Chat:
         """
         Безопасно возвращает чат (при отсутствии в дб создаст запись)
         :return:
@@ -28,7 +27,7 @@ class GetData:
         except IndexError:
             return self.add_chat()
 
-    def get_user(self) -> TgUser:
+    def get_db_user(self) -> TgUser:
         """
         Возвращает пользователя, при отсутствии в дб создает запись
         :return:
@@ -76,25 +75,26 @@ class GetData:
 
         UserChat.create(
             user=user_record,
-            chat=self.get_chat()
+            chat=self.get_db_chat()
         )
 
         return user_record
 
     @property
     def full_user_info(self):
-        db_user = self.get_user()
-        user_info: dict[Union[int, str, bool, list]] = {
-            "user_id": self.user_id,
-            "username": self.username,
-            "usernik": self.usernik,
-            "is_administrator_in_bot": db_user.is_administrator_in_bot,
-            "is_owner": self.username in OWNER,
-            "statistics": {
-                "per_day": db_user.statistics.messages_per_day,
-                "per_week": db_user.statistics.messages_per_week,
-                "per_all_time": db_user.statistics.messages_per_all_time,
-            },
-            "chats_in": db_user.chats
-        }
+        db_user = self.get_db_user()
+        user_info: User = User(
+            user_id=self.user_id,
+            username=self.username,
+            usernik=self.usernik,
+            db_user=db_user
+        )
         return user_info
+
+    @property
+    def full_chat_info(self):
+        db_chat: Chat = self.get_db_chat()
+        chat_info: ChatInfo = ChatInfo(
+            db_chat
+        )
+        return chat_info
