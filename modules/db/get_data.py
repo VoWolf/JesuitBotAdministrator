@@ -1,3 +1,5 @@
+import datetime
+
 import telebot.types
 
 from modules.db.Tables.ChatTables import Chat, AutoDeleteTime, UserChat
@@ -36,12 +38,10 @@ class GetData:
     def full_user_info(self):
         try:
             db_user = TgUser.get(telegram_id=self.user_id)
-        except IndexError:
+        except Exception as e:
+            print(e)
             db_user = self.add_user()
         return User(
-            user_id=self.user_id,
-            username=self.user.username,
-            usernik=self.user.full_name,
             db_user=db_user
         )
 
@@ -52,22 +52,16 @@ class GetData:
             user_name=self.user.username,
             is_administrator_in_bot=False
         )
-        UserStatistics.create(
-            messages_per_day=1,
-            messages_per_week=1,
-            messages_per_mouth=1,
-            messages_per_all_time=1,
-            user=new_user
-        )
         InactiveDays.create(
             warned_to_go=False,
             inactive_days_counter=0,
-            free_days="",
+            warned_to_go_valid_until=datetime.datetime.now(),
+            free_days="0",
             user=new_user
         )
         UserChat.create(
             user=new_user,
-            chat=Chat.get(chat_id=self.chat_id)
+            chat=self.full_chat_info.chat_id
         )
         return new_user
 

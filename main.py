@@ -1,6 +1,7 @@
 """Главный файл"""
 from modules.db.Create_tables import create_tables
-from modules.domain._CommandExecutor import Commands
+from modules.domain.CommandExecutor import Commands
+from modules.domain.cerberus import Cerberus
 from modules.instances.bot_instance import BOT
 # from modules.domain.decorators import
 
@@ -19,24 +20,19 @@ def user_statistics(message):
     pass
 
 
-@BOT.message_handler(regexp="Церберус, мои свободные дни")
+@BOT.message_handler(commands=["my_free_days"])
 def free_days(message):
     cmd = Commands(message)
     cmd.send_free_user_days()
 
 
-@BOT.message_handler(regexp="Церберус, пригласи @")
-def add_member(message):
-    pass
-
-
-@BOT.message_handler(regexp=["Церберус, прогони @"])
+@BOT.message_handler(regexp="Церберус, прогони @")
 def ban_member(message):
     cmd = Commands(message)
     cmd.ban_user()
 
 
-@BOT.message_handler(regexp="Церберус, добавь стоп-слово")
+@BOT.message_handler(commands=["add_bad_word"])
 def add_stop_word(message):
     cmd = Commands(message)
     cmd.add_stop_word()
@@ -56,12 +52,14 @@ def planned_walks(message):
 
 @BOT.message_handler(regexp="Церберус, добавь прогулку")
 def add_walk(message):
-    pass
+    cmd = Commands(message)
+    cmd.add_walk()
 
 
 @BOT.message_handler(startwith="Церберус")
 def add_walk(message):
-    pass
+    cerberus = Cerberus(message)
+    cerberus.send("На месте!")
 
 
 BOT.infinity_polling(none_stop=True)

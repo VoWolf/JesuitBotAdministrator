@@ -26,7 +26,7 @@ class Commands:
     def send_free_user_days(self):
         free_days = self.USER.free_days
         self.CERBERUS.send(f"{self.USER.username}, твои свободные дни: "
-                           f"{free_days if free_days else 'Ты не добавил свободных дней, занятой какой'}")
+                           f"{', '.join(free_days) if free_days else 'Ты не добавил свободных дней, занятой какой'}")
 
     def ban_user(self):
         data = self.CERBERUS.extract(cut_start=2, params_types=[str, str])
@@ -84,7 +84,7 @@ class Commands:
         self.CERBERUS.reply("Прогулка создана успешно!"
                             "\nЗаписаться: /go [имя прогулки]"
                             "\nОтписаться: /leave [имя прогулки]"
-                            "\nУдалить: /delete [имя прогулки]"
-                            "\nИзменить: /change [параметр][имя прогулки]"
+                            "\nУдалить: /delete_walk [имя прогулки]"
+                            "\nИзменить: /change_walk [параметр][имя прогулки]"
                             "\nПозвать всех, кто идет: @[имя прогулки]"
                             "\nПодробнее: /walks_info")
