@@ -12,11 +12,8 @@ class DbChat:
         self.walks = [walk[:-1] for walk in db.execute(db_chat.walks).fetchall()]
 
 
-class ChatInfo:
-    def __init__(
-            self,
-            db_chat: Chat
-    ) -> None:
+class ChatInfo(DbChat):
+    def __init__(self, db_chat: Chat) -> None:
+        super().__init__(db_chat)
         self.chat_id = db_chat.chat_id,
         self.type = db_chat.chat_type,
-        self.db_chat = DbChat(db_chat)

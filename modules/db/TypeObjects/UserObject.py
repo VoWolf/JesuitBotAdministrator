@@ -23,24 +23,17 @@ class Statistics:
         return list(map(lambda day: len(day), days))
 
 
-class User:
-    def __init__(
-            self,
-            user_id: int,
-            username: str,
-            usernik: str,
-            db_user: TgUser
-    ):
+class User(Statistics):
+    def __init__(self, db_user: TgUser):
+        super().__init__(db_user)
         self.db_user = db_user
 
-        self.user_id = user_id
-        self.username = username
-        self.usernik = usernik
+        self.user_id = db_user.telegram_id
+        self.username = db_user.user_name
+        self.usernik = db_user.user_nik
 
         self.is_administrator_in_bot = db_user.is_administrator_in_bot
         self.is_owner = self.username in OWNER
-
-        self.stata = db.execute(db_user.statistics).fetchall()
 
         inactive_data = db.execute(db_user.inactive).fetchone()[:-1]
 
