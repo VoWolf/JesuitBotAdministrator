@@ -1,4 +1,4 @@
-from peewee import AutoField, IntegerField, BooleanField, CharField, ForeignKeyField
+from peewee import AutoField, IntegerField, BooleanField, CharField, ForeignKeyField, DateTimeField
 from modules.db.Tables.BaseModel import BaseModel
 
 
@@ -18,7 +18,7 @@ class TgUser(BaseModel):
         Является ли пользователь администратором внутри бота (НЕ ЧАТА!!!)
 
     Ссылки на другие таблицы:
-        "statistics" - статистика данного пользователя
+        "statistics (dev)" - статистика данного пользователя
 
         "chats" - чаты, в которых состоит пользователь
 
@@ -47,30 +47,16 @@ class UserStatistics(BaseModel):
     user (ForeignKey)
         Ссылка на запись о пользователе, к которому относится статистика
     """
-    messages_per_day = IntegerField()
-    messages_per_week = IntegerField()
-    messages_per_all_time = IntegerField()
-    user = ForeignKeyField(TgUser, backref="statistics")
+    time_message_sent_at = DateTimeField
+    user = ForeignKeyField(TgUser, backref="statistics (dev)")
 
 
 class InactiveDays(BaseModel):
     """
     New**
     """
-    warned_to_go: BooleanField()
+    warned_to_go = BooleanField()
+    warned_to_go_valid_until = DateTimeField()
     inactive_days_counter = IntegerField()
+    free_days = CharField(max_length=7)
     user = ForeignKeyField(TgUser, backref="inactive")
-
-
-class FreeWeekDays(BaseModel):
-    """
-    New**
-    """
-    monday = BooleanField()
-    tuesday = BooleanField()
-    wednesday = BooleanField()
-    Thursday = BooleanField()
-    Friday = BooleanField()
-    Saturday = BooleanField()
-    Sunday = BooleanField()
-    user = ForeignKeyField(TgUser, backref="free_days")

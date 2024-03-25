@@ -1,6 +1,6 @@
 from peewee import AutoField, IntegerField, CharField, ForeignKeyField, DateTimeField
 
-from modules.db.Tables.TgUser import TgUser
+from modules.db.Tables.TgUserTables import TgUser
 from modules.db.Tables.BaseModel import BaseModel
 
 

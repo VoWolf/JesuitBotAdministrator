@@ -87,6 +87,25 @@ class Cerberus:
             return
         return chat_member
 
+    def ban(self, reason, user_id, username):
+        BOT.ban_chat_member(
+            chat_id=self.chat_id,
+            user_id=user_id
+        )
+        self.send(text=f"@{username} забанен НАВСЕГДА. Причина: {reason}")
+
+    def extract(self, cut_start, params_types: list[type]):
+        try:
+            text = self.message.text[cut_start:params_types] + self.message.text[params_types:]
+        except Exception as e:
+            print(e)
+            self.error()
+            return
+        try:
+            text = list(map(lambda el: params_types[text.index(el)](el), text))
+        except (IndexError, ValueError):
+            self.error()
+
     def error(self):
         pass
 
