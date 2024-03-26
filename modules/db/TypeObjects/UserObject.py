@@ -33,14 +33,15 @@ class User(Statistics):
         self.is_administrator_in_bot: bool = db_user.is_administrator_in_bot
         self.is_owner: bool = self.username in OWNER
 
-        inactive_data: tuple = db.execute(db_user.inactive).fetchone()
+        inactive_data: tuple = db.execute(db_user.inactive).fetchone()[1:]
+        print(inactive_data)
 
-        self.inactive_days_counter: int = inactive_data[2]
         self.warned_to_leave: bool = inactive_data[0]
-        self.warned_to_leave_valid_until = inactive_data[1]
-        self.free_week_days: list = list(map(int, list(str(inactive_data[3]))))
+        self.warned_to_leave_valid_until: datetime = inactive_data[1]
+        self.inactive_days_counter: int = inactive_data[2]
+        self.free_week_days: str = inactive_data[3]
 
-        self.walks_registered_in: list = [walk.walk for walk in db.execute(db_user.walks).fetchall()]
+        self.walks_registered_in: list = [walk.walk for walk in db_user.walks]
 
     @property
     def statistics(self):
@@ -48,7 +49,12 @@ class User(Statistics):
 
     @property
     def free_days(self):
-        return False if self.free_week_days == "null" else list(map(
+        print(self.free_week_days)
+        if self.free_week_days == "null":
+            return []
+
+        self.free_week_days = list(map(int, list(self.free_week_days)))
+        return list(map(
             lambda d: [
                 "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"
             ][d], self.free_week_days

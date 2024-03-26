@@ -19,10 +19,6 @@ class Chat(BaseModel):
     Ссылки на другие таблицы:
         "users" - пользователи, которые состоят в чате
 
-        "autodelete_time" - время автоматического удаления сообщений в данном чате
-
-        "bot_messages" - сообщения бота в этом чате
-
         "stop_words" - стоп-слова (запрещенные слова) в данном чате
 
         "rules" - Правила чата
@@ -54,6 +50,7 @@ class StopWords(BaseModel):
     chat (ForeignKey)
         Ссылка на чат, в котором действует данное стоп-слово
     """
+    id = AutoField()
     word = CharField(max_length=64)
     word_base_form = CharField(max_length=64)
     chat = ForeignKeyField(Chat, backref="stop_words")

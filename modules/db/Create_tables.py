@@ -1,6 +1,6 @@
 from modules.db.Tables.BaseModel import db
 from modules.db.Tables.ChatTables import UserChat, StopWords, Rules, Chat
-from modules.db.Tables.TgUserTables import UserStatistics, InactiveDays, TgUser
+from modules.db.Tables.TgUserTables import UserStatistics, InactiveData, TgUser
 from modules.db.Tables.WalksTables import Place, Walks, UserWalks
 
 
@@ -15,7 +15,7 @@ def create_tables():
             [
                 TgUser,  # Таблица с пользователем
                 UserStatistics,  # Логирование сообщений пользователей
-                InactiveDays,  # Информация о периодах неактивности пользователя
+                InactiveData,  # Информация о периодах неактивности пользователя
 
                 Chat,  # Таблица я чатом
                 UserChat,  # Таблица для обеспечения связи многие ко многим между пользователями и чатом

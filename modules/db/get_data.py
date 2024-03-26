@@ -3,7 +3,7 @@ import datetime
 import telebot.types
 
 from modules.db.Tables.ChatTables import Chat, UserChat
-from modules.db.Tables.TgUserTables import TgUser, InactiveDays
+from modules.db.Tables.TgUserTables import TgUser, InactiveData
 from modules.db.Tables.WalksTables import Walks, Place
 from modules.db.TypeObjects.ChatObject import ChatInfo
 from modules.db.TypeObjects.UserObject import User
@@ -50,7 +50,7 @@ class GetData:
             user_name=self.user.username,
             is_administrator_in_bot=False
         )
-        InactiveDays.create(
+        InactiveData.create(
             warned_to_go=False,
             inactive_days_counter=0,
             warned_to_go_valid_until=datetime.datetime.now(),
@@ -72,6 +72,7 @@ class GetData:
 
     def add_walk(
             self,
+            username: str,
             name: str,
             time_start: datetime,
             time_end: datetime,
@@ -83,8 +84,8 @@ class GetData:
             name=name,
             time_start=time_start,
             time_end=time_end,
-            how_many_people=0,
-            chat=self.full_chat_info.chat_id
+            people=username + ", ",
+            chat=self.full_chat_info.db_chat
         )
         Place.create(
             city="Москва",
@@ -93,4 +94,3 @@ class GetData:
             location=location,
             walk=new_walk
         )
-

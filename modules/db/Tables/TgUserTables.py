@@ -51,7 +51,7 @@ class UserStatistics(BaseModel):
     user = ForeignKeyField(TgUser, backref="statistics (dev)")
 
 
-class InactiveDays(BaseModel):
+class InactiveData(BaseModel):
     """
     New**
     """
