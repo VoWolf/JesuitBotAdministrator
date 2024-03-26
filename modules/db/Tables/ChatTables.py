@@ -1,4 +1,4 @@
-from peewee import AutoField, IntegerField, CharField, ForeignKeyField, DateTimeField
+from peewee import AutoField, IntegerField, CharField, ForeignKeyField
 
 from modules.db.Tables.TgUserTables import TgUser
 from modules.db.Tables.BaseModel import BaseModel
@@ -45,35 +45,6 @@ class UserChat(BaseModel):
     chat = ForeignKeyField(Chat, backref="users")
 
 
-class AutoDeleteTime(BaseModel):
-    """
-    Хранит время, через которое бот автоматически будет удалять свои сообщения
-
-    autodelete_time (int)
-        Время автоудаления (секунды)
-    chat (ForeignKey)
-        Ссылка на чат, в нем действует заданное время
-    """
-    autodelete_time = IntegerField()
-    chat = ForeignKeyField(Chat, backref="autodelete_time")
-
-
-class BotsMessages(BaseModel):
-    """
-    Сохраняет все сообщения, отправленные ботом
-
-    message_id (int)
-        ID сообщения
-    time_until (timestamp)
-        Время до которого сообщение должно существовать в чате
-    chat (ForeignKey)
-        Ссылка на чат, в котором это сообщение было отправлено
-    """
-    message_id = IntegerField()
-    valid_until = DateTimeField()
-    chat = ForeignKeyField(Chat, backref="bot_messages")
-
-
 class StopWords(BaseModel):
     """
     Запрещенные слова в чате (бот будет автоматически их чистить)
@@ -84,6 +55,7 @@ class StopWords(BaseModel):
         Ссылка на чат, в котором действует данное стоп-слово
     """
     word = CharField(max_length=64)
+    word_base_form = CharField(max_length=64)
     chat = ForeignKeyField(Chat, backref="stop_words")
 
 

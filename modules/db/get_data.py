@@ -2,8 +2,9 @@ import datetime
 
 import telebot.types
 
-from modules.db.Tables.ChatTables import Chat, AutoDeleteTime, UserChat
-from modules.db.Tables.TgUserTables import TgUser, UserStatistics, InactiveDays
+from modules.db.Tables.ChatTables import Chat, UserChat
+from modules.db.Tables.TgUserTables import TgUser, InactiveDays
+from modules.db.Tables.WalksTables import Walks, Place
 from modules.db.TypeObjects.ChatObject import ChatInfo
 from modules.db.TypeObjects.UserObject import User
 
@@ -20,17 +21,14 @@ class GetData:
     def full_chat_info(self):
         try:
             return ChatInfo(db_chat=Chat.get(chat_id=self.chat_id))
-        except IndexError:
+        except Exception as e:
+            print(e)
             return ChatInfo(db_chat=self.add_chat())
 
     def add_chat(self) -> Chat:
         new_chat = Chat.create(
             chat_id=self.chat_id,
             chat_type=self.chat.type
-        )
-        AutoDeleteTime.create(
-            autodelete_time=30,
-            chat=new_chat
         )
         return new_chat
 
@@ -56,7 +54,7 @@ class GetData:
             warned_to_go=False,
             inactive_days_counter=0,
             warned_to_go_valid_until=datetime.datetime.now(),
-            free_days="0",
+            free_days="null",
             user=new_user
         )
         UserChat.create(
@@ -71,3 +69,28 @@ class GetData:
             return TgUser.get(user_name=username)
         except IndexError:
             return None
+
+    def add_walk(
+            self,
+            name: str,
+            time_start: datetime,
+            time_end: datetime,
+            metro_thread: str,
+            metro_station: str,
+            location: str
+    ) -> None:
+        new_walk = Walks.create(
+            name=name,
+            time_start=time_start,
+            time_end=time_end,
+            how_many_people=0,
+            chat=self.full_chat_info.chat_id
+        )
+        Place.create(
+            city="Москва",
+            metro_thread=metro_thread,
+            metro_station=metro_station,
+            location=location,
+            walk=new_walk
+        )
+

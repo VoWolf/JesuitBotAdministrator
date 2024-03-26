@@ -94,16 +94,30 @@ class Cerberus:
         )
         self.send(text=f"@{username} забанен НАВСЕГДА. Причина: {reason}")
 
-    def extract(self, cut_start, params_types: list[type]):
-        try:
-            text = self.message.text[cut_start:params_types] + self.message.text[params_types:]
-        except Exception as e:
-            print(e)
+    def extract(self, cut_start: int, params_types: list[type]) -> list | None:
+        """
+        Извлекает из текста сообщения необходимое кол-во параметров и приводит их
+        к нужному типу.
+
+        ОСТОРОЖНО!: Все, что не пошло в предыдущие элементы будет записано в последний
+
+        ВАЖНО!: Количество необходимых элементов равняется списку с типами данных.
+        :param cut_start: Сколько слов с начала текста надо обрезать
+        :param params_types: Типы, к которым надо привести каждое извлеченное слово
+        """
+        txt = self.message.text.split()[cut_start:]
+        if not txt:
+            print("Ошибка. EX-code: 0")
             self.error()
             return
+
+        params = len(params_types) - 1
+        txt = txt[:params] + [" ".join(txt[params:])]
+
         try:
-            text = list(map(lambda el: params_types[text.index(el)](el), text))
+            return list(map(lambda s: params_types[txt.index(s)](s), txt))
         except (IndexError, ValueError):
+            print("Ошибка. EX-code: 1")
             self.error()
 
     def error(self):

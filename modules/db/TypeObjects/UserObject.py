@@ -48,7 +48,7 @@ class User(Statistics):
 
     @property
     def free_days(self):
-        return list(map(
+        return False if self.free_week_days == "null" else list(map(
             lambda d: [
                 "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"
             ][d], self.free_week_days

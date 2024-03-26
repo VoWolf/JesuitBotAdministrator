@@ -7,9 +7,8 @@ class DbChat:
         self.db_chat = db_chat
         self.users = db.execute(db_chat.users).fetchall(),
         self.autodelete_time = db.execute(db_chat.autodelete_time).fetchone()[0],
-        self.bot_messages = [msg[:-1] for msg in db.execute(db_chat.bot_messages).fetchall()],
-        self.stop_words = [word[0] for word in db.execute(db_chat.stop_words).fetchall()]
-        self.walks = [walk[:-1] for walk in db.execute(db_chat.walks).fetchall()]
+        self.stop_words = [word for word in db_chat.stop_words]
+        self.walks = [walk[:-1] for walk in db_chat.walks]
 
 
 class ChatInfo(DbChat):
