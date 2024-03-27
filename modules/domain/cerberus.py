@@ -1,6 +1,10 @@
 """Объявляет класс бота (CERBERUS)"""
+import datetime
+
 import telebot.types
 
+from modules.constants.PyMorphy3_analyzer import MORPH
+from modules.db.Tables.TgUserTables import TgUser
 from modules.instances.bot_instance import BOT
 
 
@@ -88,37 +92,12 @@ class Cerberus:
         return chat_member
 
     def ban(self, reason, user_id, username):
+        print(user_id)
         BOT.ban_chat_member(
             chat_id=self.chat_id,
             user_id=user_id
         )
         self.send(text=f"@{username} забанен НАВСЕГДА. Причина: {reason}")
-
-    def extract(self, cut_start: int, params_types: list[type]) -> list | None:
-        """
-        Извлекает из текста сообщения необходимое кол-во параметров и приводит их
-        к нужному типу.
-
-        ОСТОРОЖНО!: Все, что не пошло в предыдущие элементы будет записано в последний
-
-        ВАЖНО!: Количество необходимых элементов равняется списку с типами данных.
-        :param cut_start: Сколько слов с начала текста надо обрезать
-        :param params_types: Типы, к которым надо привести каждое извлеченное слово
-        """
-        txt = self.message.text.split()[cut_start:]
-        if not txt:
-            print("Ошибка. EX-code: 0")
-            self.error()
-            return
-
-        params = len(params_types) - 1
-        txt = txt[:params] + [" ".join(txt[params:])]
-
-        try:
-            return list(map(lambda s: params_types[txt.index(s)](s), txt))
-        except (IndexError, ValueError):
-            print("Ошибка. EX-code: 1")
-            self.error()
 
     def error(self):
         pass
@@ -128,3 +107,38 @@ class Cerberus:
 
     def add(self) -> telebot.types.User | None:
         pass
+
+    def mute(self, user: TgUser, is_reply: bool):
+        try:
+            text = self.message.text.split()[1] if is_reply else self.message.text.split()[2]
+            duration = int(text)
+
+            if duration < 1 or duration > 1440:
+                raise TypeError("Необходимо указать значение от 1 до 1440!")
+        except (IndexError, ValueError, TypeError) as e:
+            print(e)
+            self.reply("Необходимо указать имя пользователя (или использовать команду ответом на сообщение) и число от "
+                       "1 до 1440 (Длительность мьюта в минутах)!")
+            return
+
+        BOT.restrict_chat_member(
+            chat_id=self.chat_id,
+            user_id=user.telegram_id,
+            until_date=datetime.datetime.now() + datetime.timedelta(minutes=duration)
+        )
+
+        self.send(f"{user.user_nik}, ты замьючен на {duration} "
+                  f"{MORPH.parse('минута')[0].make_agree_with_number(duration).word}, отдыхай!")
+
+    def unmute(self, user: TgUser):
+        BOT.restrict_chat_member(
+            chat_id=self.chat_id,
+            user_id=user.telegram_id,
+            can_send_messages=True,
+            can_send_media_messages=True,
+            can_send_polls=True,
+            can_send_other_messages=True,
+            can_add_web_page_previews=True
+        )
+
+        self.send(f"{user.user_nik}, теперь ты свободен! Будь аккуратнее и не зли админов:)")

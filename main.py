@@ -98,6 +98,18 @@ def del_free_day(message):
     cmd.del_free_day()
 
 
+@BOT.message_handler(commands=["mute"])
+def mute_user(message):
+    cmd = Commands(message)
+    cmd.mute_user()
+
+
+@BOT.message_handler(commands=["unmute"])
+def unmute_user(message):
+    cmd = Commands(message)
+    cmd.unmute_user()
+
+
 @BOT.message_handler(content_types=["text"])
 def test(message):
     cmd = Commands(message)

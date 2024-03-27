@@ -4,7 +4,7 @@ import telebot.types
 
 from modules.constants.PyMorphy3_analyzer import MORPH
 from modules.db.Tables.ChatTables import StopWords
-from modules.db.Tables.TgUserTables import InactiveData
+from modules.db.Tables.TgUserTables import InactiveData, TgUser
 from modules.db.Tables.WalksTables import UserWalks, Walks
 from modules.db.TypeObjects.WalkObject import Walk
 from modules.db.get_data import GetData
@@ -47,11 +47,11 @@ class Commands:
         except IndexError:
             return
 
-        user_to_ban = self.GET_DATA.get_by_username(username)
+        user_to_ban = self.GET_DATA.get_by_username(username[1:])
         if not user_to_ban:
             return
 
-        self.CERBERUS.ban(reason=data[1], user_id=user_to_ban.id, username=user_to_ban.user_name)
+        self.CERBERUS.ban(reason=" ".join(data[1:]), user_id=user_to_ban.telegram_id, username=user_to_ban.user_name)
 
     def add_stop_word(self):
         """
@@ -309,3 +309,15 @@ class Commands:
         InactiveData.save(data)
 
         self.CERBERUS.send("Список ваших свободных дней изменен!")
+
+    def mute_user(self):
+        if self.message.reply_to_message:
+            self.CERBERUS.mute(TgUser.get(telegram_id=self.message.reply_to_message.from_user.id), is_reply=True)
+        else:
+            self.CERBERUS.mute(self.GET_DATA.get_by_username(telebot.util.extract_arguments(self.message.text).split()[0][1:]), is_reply=False)
+
+    def unmute_user(self):
+        if self.message.reply_to_message:
+            self.CERBERUS.unmute(TgUser.get(telegram_id=self.message.reply_to_message.from_user.id))
+        else:
+            self.CERBERUS.unmute(self.GET_DATA.get_by_username(telebot.util.extract_arguments(self.message.text).split()[0][1:]))
