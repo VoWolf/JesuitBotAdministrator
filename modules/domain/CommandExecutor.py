@@ -176,8 +176,6 @@ class Commands:
             "\nКогда время совпадет со временем конца прогулки, та будет автоматически удалена"
             "\n\n*Параметры: "
             "\nимя - название прогулки"
-            "\nветка - ветка метро"
-            "\nстанция - станция метро"
             "\nлока - локация"
             "\nстарт - время сбора",
             parse="HTML"
@@ -211,13 +209,13 @@ class Commands:
             print(e)
             return
 
-        self.CERBERUS.send(f"Вы удалены из прогулки {self.message.text[1:]}")
+        self.CERBERUS.send(f"Вы удалены из прогулки {telebot.util.extract_arguments(self.message.text)}")
 
     def delete_walk(self):
         try:
             name = telebot.util.extract_arguments(self.message.text)
             Walks.delete_by_id(
-                Walks.select().where((Walks.chat == self.GET_DATA.full_chat_info.db_chat) & (Walks.name == name)).id
+                Walks.select().where((Walks.chat == self.GET_DATA.full_chat_info.db_chat) & (Walks.name == name))[0].id
             )
         except Exception as e:
             print(e)
@@ -227,12 +225,46 @@ class Commands:
 
     def add_current_user_from_walk(self):
         try:
-            UserWalks.create(
-                user=self.GET_DATA.full_user_info.db_user,
-                walk=Walks.get(name=telebot.util.extract_arguments(self.message.text))
-            )
+            try:
+                UserWalks.get(user=self.GET_DATA.full_user_info.db_user)
+                self.CERBERUS.reply("Вы уже записаны на эту прогулку!")
+                return
+            except Exception as e:
+                print(e)
+                UserWalks.create(
+                    user=self.GET_DATA.full_user_info.db_user,
+                    walk=Walks.get(name=telebot.util.extract_arguments(self.message.text))
+                )
         except Exception as e:
             print(e)
             return
 
         self.CERBERUS.reply("Вы записаны")
+
+    def change_walk(self):
+        data = telebot.util.extract_arguments(self.message.text)
+        try:
+            name, param, new_value = data[0], data[1], data[2] + data[3:]
+            if param == "старт":
+                new_value = datetime.strptime(new_value, "%d/%m/%Y %H:%M")
+            walk: Walks = Walks.get(chat=self.GET_DATA.full_chat_info.db_chat)
+        except (IndexError, ValueError):
+            self.CERBERUS.reply("Вы вызвали команду неправильно! Пример использования: /change_walk_data_help")
+            return
+
+        match param:
+            case "имя":
+                walk.name = new_value
+                Walks.save(walk)
+            case "лока":
+                walk.place[0].location = new_value
+                Walks.save(walk)
+            case "старт":
+                walk.time_start = new_value
+                Walks.save(walk)
+
+    def add_free_day(self):
+        pass
+
+    def del_free_day(self):
+        pass

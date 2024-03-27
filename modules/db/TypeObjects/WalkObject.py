@@ -22,5 +22,6 @@ class Walk(WalkPlace):
         self.time_start = self.walk.time_start
         self.time_end = self.walk.time_end
         self.people_count = self.walk.people_count
-        self.people: list[TgUser] = [p for p in self.walk.users]
+        self.people: list[TgUser] = [p.user for p in self.walk.users]
+        print(self.people)
         super().__init__(db.execute(self.walk.place).fetchone())
