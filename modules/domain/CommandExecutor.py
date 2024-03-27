@@ -320,20 +320,31 @@ class Commands:
                 week_day_num = ["понедельник", "вторник", "среда", "четверг", "пятница", "суббота",
                                 "воскресенье"].index(text)
                 users_to_tag = InactiveData.select(InactiveData.user).where(InactiveData.free_days.in_([str(week_day_num)]))
-            case ["админы", "admins"]:
-                users_to_tag = TgUser.select(TgUser.user_name).where(TgUser.is_administrator_in_bot is True)
+                users_to_tag = [user.user for user in users_to_tag]
+            case _ if text in ["админы", "admins"]:
+                users_to_tag = TgUser.select(TgUser.user_name).where(TgUser.is_administrator_in_bot)[:]
             case _:
                 walk = Walks.select().where((Walks.chat == self.GET_DATA.full_chat_info.db_chat) & (Walks.name == text))
                 if not walk:
                     self.CERBERUS.reply("Таково варианта призыва нема!")
                     return
-                users_to_tag = [user for user in walk[0].users]
+                users_to_tag = [user.user for user in walk[0].users]
 
         try:
-            users_to_tag = [user.user.user_name for user in users_to_tag]
+            users_to_tag = [user.user_name for user in users_to_tag]
             result_call = list(map(lambda user: hlink("|", f"t.me/{user}"), users_to_tag))
 
             self.CERBERUS.send(f"Зову...\n{''.join(result_call) if result_call else 'никого нету'}", parse="HTML")
         except Exception as e:
             print(e)
             self.CERBERUS.reply("Не могу позвать:(")
+
+    def admin_status(self, admin: bool):
+        if self.message.reply_to_message:
+            user: TgUser = TgUser.get(telegram_id=self.message.reply_to_message.from_user.id)
+        else:
+            user: TgUser = TgUser.get(user_name=telebot.util.extract_arguments(self.message.text)[1:])
+        user.is_administrator_in_bot = admin
+        TgUser.save(user)
+
+        self.CERBERUS.send(f"{user.user_nik} {'приобрел' if admin else 'проебал'} статус боженьки")

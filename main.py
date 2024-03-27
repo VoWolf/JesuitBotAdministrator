@@ -112,6 +112,18 @@ def unmute_user(message):
     cmd.unmute_user()
 
 
+@BOT.message_handler(commands=["admin_stat"])
+def give_admin_status(message):
+    cmd = Commands(message)
+    cmd.admin_status(admin=True)
+
+
+@BOT.message_handler(commands=["del_admin_stat"])
+def del_admin_status(message):
+    cmd = Commands(message)
+    cmd.admin_status(admin=False)
+
+
 @BOT.message_handler(content_types=["text"])
 def test(message):
     cmd = Commands(message)
