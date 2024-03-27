@@ -7,7 +7,6 @@ from modules.db.Tables.TgUserTables import TgUser, InactiveData
 from modules.db.Tables.WalksTables import Walks, Place
 from modules.db.TypeObjects.ChatObject import ChatInfo
 from modules.db.TypeObjects.UserObject import User
-from modules.db.TypeObjects.WalkObject import Walk
 
 
 class GetData:
@@ -48,7 +47,7 @@ class GetData:
         new_user = TgUser.create(
             telegram_id=self.user_id,
             user_nik=self.user.full_name,
-            user_name=self.user.username,
+            user_name=self.user.username if self.user.username else "БЕЗЫМЯННЫЙ ЛОХ ЛЕСНОЙ",
             is_administrator_in_bot=False
         )
         InactiveData.create(
@@ -88,7 +87,7 @@ class GetData:
             name=name,
             time_start=time_start,
             time_end=time_end,
-            people_count=1,
+            people_count=0,
             chat=self.full_chat_info.db_chat
         )
         Place.create(

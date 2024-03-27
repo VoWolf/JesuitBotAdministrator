@@ -1,3 +1,5 @@
+import telebot.util
+
 from modules.db.Create_tables import create_tables
 from modules.domain.CommandExecutor import Commands
 from modules.domain.cerberus import Cerberus
@@ -65,7 +67,7 @@ def leave_walk(message):
 @BOT.message_handler(commands=["go"])
 def go_to_walk(message):
     cmd = Commands(message)
-    cmd.add_current_user_from_walk()
+    cmd.add_current_user_to_walk()
 
 
 @BOT.message_handler(commands=["delete_walk"])
@@ -115,7 +117,7 @@ def test(message):
     cmd = Commands(message)
     match message.text:
         case _ if "/walk_" in message.text.lower():
-            cmd.get_walk_by_command_id(walk_id=message.text.split()[0].lower().strip("/walk_"))
+            cmd.get_walk_by_command_id(walk_id=telebot.util.extract_command(message.text).strip("/walk_"))
         case _ if "@" in message.text:
             cmd.check_calls(message.text[1:])
 

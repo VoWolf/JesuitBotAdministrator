@@ -37,7 +37,8 @@ class Cerberus:
             parse_mode=parse,
             reply_markup=buttons,
             protect_content=protect,
-            disable_notification=silence
+            disable_notification=silence,
+            disable_web_page_preview=True
         )
 
     def reply(

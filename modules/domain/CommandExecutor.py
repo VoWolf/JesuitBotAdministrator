@@ -1,11 +1,13 @@
 from datetime import datetime, timedelta
 
 import telebot.types
+from telebot.formatting import hlink
 
 from modules.constants.PyMorphy3_analyzer import MORPH
+from modules.db.Tables.BaseModel import db
 from modules.db.Tables.ChatTables import StopWords
 from modules.db.Tables.TgUserTables import InactiveData, TgUser
-from modules.db.Tables.WalksTables import UserWalks, Walks
+from modules.db.Tables.WalksTables import UserWalks, Walks, Place
 from modules.db.TypeObjects.WalkObject import Walk
 from modules.db.get_data import GetData
 from modules.db.TypeObjects.UserObject import User
@@ -109,7 +111,8 @@ class Commands:
         )
 
     def add_walk(self):   # Проверено
-        data: list[str] = telebot.util.extract_arguments(self.message.text).split("::")
+        data: list[str] = telebot.util.extract_arguments(self.message.text).split("|")
+        data = list(map(str.strip, data))
         try:
             name, metro_thread, metro_station, location = data[0:4]
             time_start, long = datetime.strptime(data[4], "%d/%m/%Y %H:%M"), int(data[5])
@@ -119,7 +122,7 @@ class Commands:
             return
 
         self.GET_DATA.add_walk(
-            name=name,
+            name=name.lower(),
             time_start=time_start,
             time_end=time_start + timedelta(hours=long),
             metro_thread=metro_thread,
@@ -182,49 +185,34 @@ class Commands:
             parse="HTML"
         )
 
-    @staticmethod
-    def check_calls(text):
-        text = text.lower()
-        match text:
-            case _ if "понедельник" in text:
-                pass
-            case _ if "вторник" in text:
-                pass
-            case _ if "среда" in text:
-                pass
-            case _ if "четверг" in text:
-                pass
-            case _ if "пятница" in text:
-                pass
-            case _ if "суббота" in text:
-                pass
-            case _ if "воскресенье" in text:
-                pass
-
     def delete_current_user_from_walk(self):
         try:
             UserWalks.delete_by_id(
                 UserWalks.get(user=self.GET_DATA.full_user_info.db_user).id
             )
+            walk: Walks = Walks.get(name=telebot.util.extract_arguments(self.message.text))
+            walk.people_count -= 1
+            Walks.save(walk)
         except Exception as e:
             print(e)
             return
 
-        self.CERBERUS.send(f"Вы удалены из прогулки {telebot.util.extract_arguments(self.message.text)}")
+        self.CERBERUS.send(f"Вы удалены из прогулки {walk.name}")
 
     def delete_walk(self):
         try:
-            name = telebot.util.extract_arguments(self.message.text)
-            Walks.delete_by_id(
-                Walks.select().where((Walks.chat == self.GET_DATA.full_chat_info.db_chat) & (Walks.name == name))[0].id
-            )
+            name = telebot.util.extract_arguments(self.message.text).lower()
+            walk = Walks.select().where((Walks.chat == self.GET_DATA.full_chat_info.db_chat) & (Walks.name == name))[0]
+            db.execute(UserWalks.delete().where(UserWalks.walk == walk))
+            db.execute(Place.delete().where(Place.walk == walk))
+            Walks.delete_by_id(walk.id)
         except Exception as e:
             print(e)
             return
 
         self.CERBERUS.reply("Прогулка удалена!")
 
-    def add_current_user_from_walk(self):
+    def add_current_user_to_walk(self):
         try:
             try:
                 UserWalks.get(user=self.GET_DATA.full_user_info.db_user)
@@ -234,8 +222,11 @@ class Commands:
                 print(e)
                 UserWalks.create(
                     user=self.GET_DATA.full_user_info.db_user,
-                    walk=Walks.get(name=telebot.util.extract_arguments(self.message.text))
+                    walk=Walks.get(name=telebot.util.extract_arguments(self.message.text).lower())
                 )
+                walk: Walks = Walks.get(name=telebot.util.extract_arguments(self.message.text))
+                walk.people_count += 1
+                Walks.save(walk)
         except Exception as e:
             print(e)
             return
@@ -321,3 +312,28 @@ class Commands:
             self.CERBERUS.unmute(TgUser.get(telegram_id=self.message.reply_to_message.from_user.id))
         else:
             self.CERBERUS.unmute(self.GET_DATA.get_by_username(telebot.util.extract_arguments(self.message.text).split()[0][1:]))
+
+    def check_calls(self, text):
+        text = text.lower()
+        match text:
+            case _ if text in ["понедельник", "вторник", "среда", "четверг", "пятница", "суббота", "воскресенье"]:
+                week_day_num = ["понедельник", "вторник", "среда", "четверг", "пятница", "суббота",
+                                "воскресенье"].index(text)
+                users_to_tag = InactiveData.select(InactiveData.user).where(InactiveData.free_days.in_([str(week_day_num)]))
+            case ["админы", "admins"]:
+                users_to_tag = TgUser.select(TgUser.user_name).where(TgUser.is_administrator_in_bot is True)
+            case _:
+                walk = Walks.select().where((Walks.chat == self.GET_DATA.full_chat_info.db_chat) & (Walks.name == text))
+                if not walk:
+                    self.CERBERUS.reply("Таково варианта призыва нема!")
+                    return
+                users_to_tag = [user for user in walk[0].users]
+
+        try:
+            users_to_tag = [user.user.user_name for user in users_to_tag]
+            result_call = list(map(lambda user: hlink("|", f"t.me/{user}"), users_to_tag))
+
+            self.CERBERUS.send(f"Зову...\n{''.join(result_call) if result_call else 'никого нету'}", parse="HTML")
+        except Exception as e:
+            print(e)
+            self.CERBERUS.reply("Не могу позвать:(")
