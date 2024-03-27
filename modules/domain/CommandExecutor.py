@@ -4,8 +4,6 @@ import telebot.types
 
 from modules.constants.PyMorphy3_analyzer import MORPH
 from modules.db.Tables.ChatTables import StopWords
-from modules.db.Tables.TgUserTables import InactiveData
-from modules.db.Tables.WalksTables import Walks
 from modules.db.TypeObjects.WalkObject import Walk
 from modules.db.get_data import GetData
 from modules.db.TypeObjects.UserObject import User
@@ -102,7 +100,7 @@ class Commands:
         #     self.CERBERUS.error()
 
     def send_planned_walks(self):
-        walks = [w.name + f" Подробнее: /walk_{w.id}" for w in self.GET_DATA.full_chat_info.walks]
+        walks = [w.name + f" | Подробнее: /walk_{w.id}" for w in self.GET_DATA.full_chat_info.walks]
         self.CERBERUS.send(
             text="Все запланированные прогулки:\n" +
                  "\n".join(walks) if walks else "Нет запланированных прогулок!"
@@ -119,7 +117,6 @@ class Commands:
             return
 
         self.GET_DATA.add_walk(
-            username=self.message.from_user.username,
             name=name,
             time_start=time_start,
             time_end=time_start + timedelta(hours=long),
@@ -151,12 +148,13 @@ class Commands:
             f"\nНазвание: {walk.name}"
             f"\nНачало: ~{walk.time_start}"
             f"\nКонец: ~{walk.time_end} (Но это не точно)"
-            "\n#Локация-----------------------#"
+            "\nЛокация------------------------#"
             f"\nВетка метро: {walk.metro_thread}"
             f"\nСтанция метро: {walk.metro_station}"
             f"\nМесто: {walk.location}"
-            "\n#Идут--------------------------#"
-            f"\n{walk.people}")
+            f"\nЛюдей идет: {walk.people_count}"
+            "\nИдут---------------------------#"
+            f"\n{'Никто не записан' if not walk.people else ', '.join([p.user_nik for p in walk.people])}")
 
     def send_help_info_walks(self):
         self.CERBERUS.send(
@@ -183,14 +181,6 @@ class Commands:
             "\nстарт - время сбора",
             parse="HTML"
         )
-        # / go[имя
-        # прогулки]"
-        # "\nОтписаться: /leave [имя прогулки]"
-        # "\nУдалить: /delete_walk [имя прогулки]"
-        # "\nИзменить: /change_walk [параметр][имя прогулки]"
-        # "\nПозвать всех, кто идет: @[имя прогулки]"
-        # "\nПодробнее: /walks_info"
-        # "\nДругие прогулки: /walks"
 
     @staticmethod
     def check_calls(text):
@@ -210,3 +200,6 @@ class Commands:
                 pass
             case _ if "воскресенье" in text:
                 pass
+
+    def delete_current_user_from_walk(self):
+        pass

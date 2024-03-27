@@ -60,7 +60,8 @@ def add_walk(message):
 
 @BOT.message_handler(commands=["leave"])
 def leave_walk(message):
-    pass
+    cmd = Commands(message)
+    cmd.delete_current_user_from_walk()
 
 
 @BOT.message_handler(commands=["delete_walk"])

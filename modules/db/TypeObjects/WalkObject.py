@@ -1,5 +1,6 @@
 from modules.db.Tables.BaseModel import db
 from modules.db.Tables.ChatTables import Chat
+from modules.db.Tables.TgUserTables import TgUser
 from modules.db.Tables.WalksTables import Place, Walks
 
 
@@ -16,5 +17,6 @@ class Walk(WalkPlace):
         self.name = self.walk.name
         self.time_start = self.walk.time_start
         self.time_end = self.walk.time_end
-        self.people = self.walk.people
+        self.people_count = self.walk.people_count
+        self.people: list[TgUser] = [p for p in self.walk.users]
         super().__init__(db.execute(self.walk.place).fetchone())

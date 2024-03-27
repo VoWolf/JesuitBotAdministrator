@@ -7,6 +7,7 @@ from modules.db.Tables.TgUserTables import TgUser, InactiveData
 from modules.db.Tables.WalksTables import Walks, Place
 from modules.db.TypeObjects.ChatObject import ChatInfo
 from modules.db.TypeObjects.UserObject import User
+from modules.db.TypeObjects.WalkObject import Walk
 
 
 class GetData:
@@ -70,9 +71,12 @@ class GetData:
         except IndexError:
             return None
 
+    @property
+    def full_walk_info(self):
+        return Walks.get_or_none()
+
     def add_walk(
             self,
-            username: str,
             name: str,
             time_start: datetime,
             time_end: datetime,
@@ -84,7 +88,7 @@ class GetData:
             name=name,
             time_start=time_start,
             time_end=time_end,
-            people=username + ", ",
+            people_count=1,
             chat=self.full_chat_info.db_chat
         )
         Place.create(

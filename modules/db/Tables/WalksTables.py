@@ -9,7 +9,7 @@ class Walks(BaseModel):
     name = CharField(max_length=32)
     time_start = DateTimeField()
     time_end = DateTimeField()
-    people = CharField()
+    people_count = IntegerField()
     chat = ForeignKeyField(Chat, backref="walks")
 
 
