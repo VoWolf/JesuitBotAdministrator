@@ -12,8 +12,12 @@ class WalkPlace:
 
 
 class Walk(WalkPlace):
-    def __init__(self, chat: Chat):
-        self.walk: Walks = Walks.get(chat=chat)
+    def __init__(self, chat: Chat | None = None, name: str | None = None, walk_id: int | None = None):
+        if walk_id:
+            self.walk: Walks = Walks.get_by_id(walk_id)
+        else:
+            self.walk: Walks = Walks.select().where((Walks.chat == chat) & (Walks.name == name))
+
         self.name = self.walk.name
         self.time_start = self.walk.time_start
         self.time_end = self.walk.time_end

@@ -4,6 +4,7 @@ import telebot.types
 
 from modules.constants.PyMorphy3_analyzer import MORPH
 from modules.db.Tables.ChatTables import StopWords
+from modules.db.Tables.WalksTables import UserWalks, Walks
 from modules.db.TypeObjects.WalkObject import Walk
 from modules.db.get_data import GetData
 from modules.db.TypeObjects.UserObject import User
@@ -136,9 +137,9 @@ class Commands:
             "\nДругие прогулки: /walks"
         )
 
-    def get_walk_by_command(self):
+    def get_walk_by_command_id(self, walk_id):
         try:
-            walk = Walk(self.GET_DATA.full_chat_info.db_chat)
+            walk = Walk(walk_id=int(walk_id))
             print(walk)
         except Exception as e:
             print(e)
@@ -202,4 +203,36 @@ class Commands:
                 pass
 
     def delete_current_user_from_walk(self):
-        pass
+        try:
+            UserWalks.delete_by_id(
+                UserWalks.get(user=self.GET_DATA.full_user_info.db_user).id
+            )
+        except Exception as e:
+            print(e)
+            return
+
+        self.CERBERUS.send(f"Вы удалены из прогулки {self.message.text[1:]}")
+
+    def delete_walk(self):
+        try:
+            name = telebot.util.extract_arguments(self.message.text)
+            Walks.delete_by_id(
+                Walks.select().where((Walks.chat == self.GET_DATA.full_chat_info.db_chat) & (Walks.name == name)).id
+            )
+        except Exception as e:
+            print(e)
+            return
+
+        self.CERBERUS.reply("Прогулка удалена!")
+
+    def add_current_user_from_walk(self):
+        try:
+            UserWalks.create(
+                user=self.GET_DATA.full_user_info.db_user,
+                walk=Walks.get(name=telebot.util.extract_arguments(self.message.text))
+            )
+        except Exception as e:
+            print(e)
+            return
+
+        self.CERBERUS.reply("Вы записаны")

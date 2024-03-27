@@ -64,9 +64,16 @@ def leave_walk(message):
     cmd.delete_current_user_from_walk()
 
 
+@BOT.message_handler(commands=["go"])
+def go_to_walk(message):
+    cmd = Commands(message)
+    cmd.add_current_user_from_walk()
+
+
 @BOT.message_handler(commands=["delete_walk"])
 def delete_walk(message):
-    pass
+    cmd = Commands(message)
+    cmd.delete_walk()
 
 
 @BOT.message_handler(commands=["change_walk"])
@@ -74,10 +81,10 @@ def change_walk(message):
     pass
 
 
-@BOT.message_handler(commands=["walks_info"])
-def walks_info(message):
-    cmd = Commands(message)
-    cmd.send_help_info_walks()
+# @BOT.message_handler(commands=["walks_info"])
+# def walks_info(message):
+#     cmd = Commands(message)
+#     cmd.send_help_info_walks()
 
 
 @BOT.message_handler(commands=["cerb"])
@@ -90,8 +97,8 @@ def add_walk(message):
 def test(message):
     cmd = Commands(message)
     match message.text:
-        case _ if "walk" in message.text.lower():
-            cmd.get_walk_by_command()
+        case _ if "walk_" in message.text.lower():
+            cmd.get_walk_by_command_id(walk_id=message.text.split()[0].lower().strip("walk_"))
         case _ if "@" in message.text:
             cmd.check_calls(message.text[1:])
 

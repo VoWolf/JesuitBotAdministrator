@@ -1,4 +1,4 @@
-from peewee import CharField, ForeignKeyField, DateTimeField, IntegerField
+from peewee import CharField, ForeignKeyField, DateTimeField, IntegerField, AutoField
 
 from modules.db.Tables.TgUserTables import TgUser
 from modules.db.Tables.ChatTables import Chat
@@ -6,6 +6,7 @@ from modules.db.Tables.BaseModel import BaseModel
 
 
 class Walks(BaseModel):
+    id = AutoField()
     name = CharField(max_length=32)
     time_start = DateTimeField()
     time_end = DateTimeField()
