@@ -4,6 +4,7 @@ import telebot.types
 
 from modules.constants.PyMorphy3_analyzer import MORPH
 from modules.db.Tables.ChatTables import StopWords
+from modules.db.Tables.TgUserTables import InactiveData
 from modules.db.Tables.WalksTables import UserWalks, Walks
 from modules.db.TypeObjects.WalkObject import Walk
 from modules.db.get_data import GetData
@@ -35,8 +36,8 @@ class Commands:
         пометил как свободные
         :return:
         """
-        free_days = "".join(self.USER.free_days)
-        self.CERBERUS.send(f"{self.USER.username}, {f'твои свободные дни: {free_days}' if free_days else 'ты не добавил свободных дней, занятой какой'}")
+        free_days = ", ".join(self.USER.free_days)
+        self.CERBERUS.send(f"{self.USER.username}, {f'твои свободные дни: ' + free_days if free_days else 'ты не добавил свободных дней, занятой какой'}")
 
     def ban_user(self):
         data: list[str] = telebot.util.extract_arguments(self.message.text).split()
@@ -263,8 +264,48 @@ class Commands:
                 walk.time_start = new_value
                 Walks.save(walk)
 
+    @staticmethod
+    def check_input_format_week_days(value: str) -> bool:
+        try:
+            return value.isalnum() and 0 <= int(value) <= 6
+        except ValueError:
+            return False
+
     def add_free_day(self):
-        pass
+        week_day = telebot.util.extract_arguments(self.message.text)
+        if not self.check_input_format_week_days(telebot.util.extract_arguments(self.message.text)):
+            self.CERBERUS.reply(
+                "Ты указал несуществующий день недели! Необходимо указать число 0 - 6 "
+                "(0 - понедельник, 6 - воскресенье)"
+            )
+            return
+
+        data: InactiveData = InactiveData.get(user=self.GET_DATA.full_user_info.db_user)
+        if data.free_days != "null":
+            data.free_days += week_day
+        else:
+            data.free_days = week_day
+        InactiveData.save(data)
+
+        self.CERBERUS.send("Список ваших свободных дней изменен!")
 
     def del_free_day(self):
-        pass
+        week_day = telebot.util.extract_arguments(self.message.text)
+        if not self.check_input_format_week_days(telebot.util.extract_arguments(self.message.text)):
+            self.CERBERUS.reply(
+                "Ты указал несуществующий день недели! Необходимо указать число 0 - 6 "
+                "(0 - понедельник, 6 - воскресенье)"
+            )
+            return
+
+        data: InactiveData = InactiveData.get(user=self.GET_DATA.full_user_info.db_user)
+        free = list(data.free_days)
+        try:
+            del free[free.index(week_day)]
+        except ValueError:
+            return
+
+        data.free_days = "".join(free) if not "".join(free) else "null"
+        InactiveData.save(data)
+
+        self.CERBERUS.send("Список ваших свободных дней изменен!")

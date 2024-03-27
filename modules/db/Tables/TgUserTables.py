@@ -48,7 +48,7 @@ class UserStatistics(BaseModel):
         Ссылка на запись о пользователе, к которому относится статистика
     """
     time_message_sent_at = DateTimeField()
-    user = ForeignKeyField(TgUser, backref="statistics (dev)")
+    user = ForeignKeyField(TgUser, backref="statistics")
 
 
 class InactiveData(BaseModel):

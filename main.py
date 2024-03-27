@@ -1,5 +1,3 @@
-from telebot.formatting import hlink
-
 from modules.db.Create_tables import create_tables
 from modules.domain.CommandExecutor import Commands
 from modules.domain.cerberus import Cerberus
