@@ -77,6 +77,39 @@ class Cerberus:
             reply_markup=buttons,
         )
 
+    def poll(
+            self,
+            question: str,
+            answers: list[str],
+            anonymous: bool,
+            quiz: bool,
+            correct: int | None= None,
+            expl: str | None = None,
+            many_answers: bool = False,
+            until: datetime | None = None
+    ):
+        BOT.send_poll(
+            chat_id=self.chat_id,
+            question=question,
+            options=answers,
+            is_anonymous=anonymous,
+            type="quiz" if quiz else "regular",
+            correct_option_id=correct,
+            explanation=expl,
+            allows_multiple_answers=many_answers,
+            close_date=until
+        )
+
+    def pin(
+        self,
+        message_id_delta: int
+    ):
+        BOT.pin_chat_message(
+            chat_id=self.chat_id,
+            message_id=self.message.id + message_id_delta,
+            disable_notification=False
+        )
+
     def chat_member(
         self,
         username_or_userid: str | int
@@ -101,12 +134,6 @@ class Cerberus:
         self.send(text=f"@{username} забанен НАВСЕГДА. Причина: {reason}")
 
     def error(self):
-        pass
-
-    def change_autodelete_time(self) -> None:
-        pass
-
-    def add(self) -> telebot.types.User | None:
         pass
 
     def mute(self, user: TgUser, is_reply: bool):

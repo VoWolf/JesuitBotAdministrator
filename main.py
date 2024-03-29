@@ -124,6 +124,12 @@ def del_admin_status(message):
     cmd.admin_status(admin=False)
 
 
+@BOT.poll_answer_handler(func=lambda poll_answer: True)
+def register_poll_answer(answer: telebot.types.PollAnswer):
+    if answer.option_ids[0] != 1:
+        return
+
+
 @BOT.message_handler(content_types=["text"])
 def test(message):
     cmd = Commands(message)

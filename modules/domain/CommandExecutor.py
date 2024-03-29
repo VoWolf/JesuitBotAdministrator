@@ -140,6 +140,14 @@ class Commands:
             "\nПодробнее: /walks_info"
             "\nДругие прогулки: /walks"
         )
+        self.CERBERUS.poll(
+            question=f"Кто идет на {name}?",
+            answers=["Я иду", "Я не иду"],
+            anonymous=False,
+            quiz=False,
+            until=time_start
+        )
+        self.CERBERUS.pin(message_id_delta=0)
 
     def get_walk_by_command_id(self, walk_id):
         try:
@@ -212,26 +220,28 @@ class Commands:
 
         self.CERBERUS.reply("Прогулка удалена!")
 
-    def add_current_user_to_walk(self):
+    def add_current_user_to_walk(self, user_id: int | None = None, walk_name: str | None = None):
         try:
+            user = TgUser.get(telegram_id=user_id) if user_id else self.GET_DATA.full_user_info.db_user
+            walk = Walks.get(name=walk_name) if walk_name else \
+                Walks.get(name=telebot.util.extract_arguments(self.message.text).lower())
             try:
-                UserWalks.get(user=self.GET_DATA.full_user_info.db_user)
+                UserWalks.get(user=user)
                 self.CERBERUS.reply("Вы уже записаны на эту прогулку!")
                 return
             except Exception as e:
                 print(e)
                 UserWalks.create(
-                    user=self.GET_DATA.full_user_info.db_user,
-                    walk=Walks.get(name=telebot.util.extract_arguments(self.message.text).lower())
+                    user=user,
+                    walk=walk
                 )
-                walk: Walks = Walks.get(name=telebot.util.extract_arguments(self.message.text))
                 walk.people_count += 1
                 Walks.save(walk)
         except Exception as e:
             print(e)
             return
 
-        self.CERBERUS.reply("Вы записаны")
+        self.CERBERUS.send("Вы записаны")
 
     def change_walk(self):
         data = telebot.util.extract_arguments(self.message.text)
@@ -326,7 +336,6 @@ class Commands:
             case _:
                 walk = Walks.select().where((Walks.chat == self.GET_DATA.full_chat_info.db_chat) & (Walks.name == text))
                 if not walk:
-                    self.CERBERUS.reply("Таково варианта призыва нема!")
                     return
                 users_to_tag = [user.user for user in walk[0].users]
 

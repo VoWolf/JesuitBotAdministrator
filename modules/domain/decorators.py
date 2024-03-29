@@ -1,7 +1,6 @@
 import telebot.types
 
 from modules.db.get_data import GetData
-from modules.domain.add_vote import Vote
 from modules.domain.cerberus import Cerberus
 
 
