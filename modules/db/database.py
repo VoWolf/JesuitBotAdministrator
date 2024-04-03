@@ -6,6 +6,7 @@ db = SqliteDatabase("database.db")
 
 
 class BaseModel(Model):
+    """test"""
     created_at = DateTimeField(default=datetime.now)
     updated_at = DateTimeField(default=datetime.now)
 
