@@ -95,14 +95,6 @@ class Commands:
 
         self.CERBERUS.send(f"Слово {normal_form} удалено из списка запрещенных слов. Развлекайтесь!")
 
-        # word = self.CERBERUS.extract(cut_start=3, params_types=[str])[0]
-        # if not word:
-        #     return
-        # try:
-        #     StopWords.delete_by_id(StopWords.get(word=word).id)
-        # except IndexError:
-        #     self.CERBERUS.error()
-
     def send_planned_walks(self):
         walks = [w.name + f" | Подробнее: /walk_{w.id}" for w in self.GET_DATA.full_chat_info.walks]
         self.CERBERUS.send(
